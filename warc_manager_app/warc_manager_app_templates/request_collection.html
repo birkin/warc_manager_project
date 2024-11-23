@@ -1,16 +1,23 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Request Archive-It Collection</title>
+    <!-- Link to the CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
+    <header>
+        Brown University Library
+    </header>
     <h1>Request Archive-It Collection</h1>
     <form method="post">
         {% csrf_token %}
-        <label for="collection_id">Collection ID:</label>
-        <input type="text" id="collection_id" name="collection_id" required>
+        <label for="collection-id">Collection ID:</label>
+        <input id="collection-id" name="collection_id" type="text">
         <button type="submit">Submit</button>
     </form>
-    <p>{{ message }}</p>
 </body>
 </html>

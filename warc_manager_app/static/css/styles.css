@@ -1,0 +1,10 @@
+/* styles.css */
+header {
+    height: 0.5in;
+    background-color: maroon; /* Maroon background */
+    color: #fff; /* White text */
+    font-family: Verdana, sans-serif; /* Verdana font */
+    display: flex;
+    align-items: center;
+    padding-left: 1rem; /* Add padding for left alignment */
+}
