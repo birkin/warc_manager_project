@@ -50,6 +50,7 @@ def request_collection(request):
     On GET, displays a form to input a collection ID.
     On POST, checks and initiates a download process.
     """
+    log.debug('starting request_collection()')
     if request.method == 'GET':
         return render(request, 'request_collection.html', {'message': ''})
 
