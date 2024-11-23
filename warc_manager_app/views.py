@@ -8,9 +8,8 @@ from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from warc_manager_app.lib import version_helper
+from warc_manager_app.lib import request_collection_helper, version_helper
 from warc_manager_app.lib.version_helper import GatherCommitAndBranchData
-
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +42,34 @@ def info(request):
         log.debug('building template response')
         resp = render(request, 'info.html', context)
     return resp
+
+
+def request_collection(request):
+    """
+    Handles Archive-It collection download requests.
+    On GET, displays a form to input a collection ID.
+    On POST, checks and initiates a download process.
+    """
+    if request.method == 'GET':
+        return render(request, 'request_collection.html', {'message': ''})
+
+    elif request.method == 'POST':
+        collection_id = request.POST.get('collection_id', '').strip()
+        if not collection_id:
+            return render(request, 'request_collection.html', {'message': 'Collection ID is required.'})
+
+        log.debug(f'Received collection ID: {collection_id}')
+        # Check if the collection is already downloaded or in-process
+        status = request_collection_helper.check_collection_status(collection_id)
+
+        if status.get('exists'):
+            message = f'Collection {collection_id} is already downloaded or in process.'
+            return render(request, 'request_collection.html', {'message': message})
+
+        # Initiate download if not already handled
+        result = request_collection_helper.initiate_download(collection_id)
+        message = result.get('message', f'Collection {collection_id} download initiated.')
+        return render(request, 'request_collection.html', {'message': message})
 
 
 # -------------------------------------------------------------------

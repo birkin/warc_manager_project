@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Request Archive-It Collection</title>
+</head>
+<body>
+    <h1>Request Archive-It Collection</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="collection_id">Collection ID:</label>
+        <input type="text" id="collection_id" name="collection_id" required>
+        <button type="submit">Submit</button>
+    </form>
+    <p>{{ message }}</p>
+</body>
+</html>
