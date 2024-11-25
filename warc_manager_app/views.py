@@ -53,7 +53,8 @@ def request_collection(request):
     log.debug('starting request_collection()')
 
     if request.method == 'GET':
-        message = request.session.get('message', '')
+        # message = request.session.get('message', '')
+        message = request.session.pop('message', '')
         return render(request, 'request_collection.html', {'message': message})
 
     elif request.method == 'POST':
