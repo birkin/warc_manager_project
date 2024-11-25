@@ -13,6 +13,11 @@ header {
     padding-left: 1rem; /* Add padding for left alignment */
 }
 
-h1, form {
+h1, form, div.alert {
     margin-left: 15px; 
+}
+
+div.alert {
+    margin-top: 1em;
+    color: maroon;
 }
