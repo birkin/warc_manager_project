@@ -14,14 +14,13 @@ import json
 import logging
 import os
 import pathlib
-from dotenv import load_dotenv, find_dotenv
 
+from dotenv import find_dotenv, load_dotenv
 
 ## load envars ------------------------------------------------------
 dotenv_path = pathlib.Path(__file__).resolve().parent.parent.parent / '.env'
 assert dotenv_path.exists(), f'file does not exist, ``{dotenv_path}``'
 load_dotenv(find_dotenv(str(dotenv_path), raise_error_if_not_found=True), override=True)
-
 
 log = logging.getLogger(__name__)
 
@@ -58,6 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'warc_manager_app',
 ]
 
 MIDDLEWARE = [
@@ -165,9 +165,7 @@ LOGGING = {
             'include_html': True,
         },
         'logfile': {
-            'level': os.environ.get(
-                'LOG_LEVEL', 'INFO'
-            ),  # add LOG_LEVEL=DEBUG to the .env file to see debug messages
+            'level': os.environ.get('LOG_LEVEL', 'INFO'),  # add LOG_LEVEL=DEBUG to the .env file to see debug messages
             'class': 'logging.FileHandler',  # note: configure server to use system's log-rotate to avoid permissions issues
             'filename': os.environ['LOG_PATH'],
             'formatter': 'standard',

@@ -1,0 +1,23 @@
+/* styles.css */
+
+head, body {
+    font-family: Verdana, sans-serif; /* Verdana font */
+}
+
+header {
+    height: 0.5in;
+    background-color: maroon; /* Maroon background */
+    color: #fff; /* White text */
+    display: flex;
+    align-items: center;
+    padding-left: 1rem; /* Add padding for left alignment */
+}
+
+h1, form, div.alert {
+    margin-left: 15px; 
+}
+
+div.alert {
+    margin-top: 1em;
+    color: maroon;
+}
