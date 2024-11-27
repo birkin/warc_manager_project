@@ -5,7 +5,7 @@ import logging
 import trio
 from django.conf import settings as project_settings
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.urls import reverse
 
 from warc_manager_app.lib import request_collection_helper, version_helper
@@ -46,35 +46,54 @@ def info(request):
 
 def request_collection(request):
     """
-    Handles Archive-It collection download requests.
-    On GET, displays a form to input a collection ID.
-    On POST, checks and initiates a download process and redirects to avoid resubmission issues.
+    Handles Archive-It collection download requests via htmx.
     """
     log.debug('starting request_collection()')
-
     if request.method == 'GET':
-        # message = request.session.get('message', '')
-        message = request.session.pop('message', '')
-        return render(request, 'request_collection.html', {'message': message})
+        log.debug('GET request')
+        return render(request, 'request_collection.html')
 
     elif request.method == 'POST':
+        log.debug('POST request')
         collection_id = request.POST.get('collection_id', '').strip()
 
         if not collection_id:
-            request.session['message'] = 'Collection ID is required.'
-            return redirect(request.path)
+            log.debug('no collection_id')
+            return HttpResponse('<div class="alert">Collection ID is required.</div>', status=200)
 
-        log.debug(f'Received collection ID: {collection_id}')
         status = request_collection_helper.check_collection_status(collection_id)
+        log.debug(f'status, ``{status}``')
 
-        if status.get('exists'):
-            request.session['message'] = f'Collection {collection_id} is already downloaded or in process.'
-            return redirect(request.path)
+        if status.get('exists') == 'in_progress':
+            log.debug('status is in_progress')
+            return HttpResponse('<div class="alert">Download in progress. <a href="/info/">More info</a></div>')
 
-        ## Initiate download if not already handled
-        result = request_collection_helper.initiate_download(collection_id)
-        request.session['message'] = result.get('message', f'Collection {collection_id} download initiated.')
-        return redirect(request.path)
+        if status.get('exists') == 'completed':
+            log.debug('status is completed')
+            return HttpResponse('<div class="alert">Download completed. <a href="/info/">More info</a></div>')
+
+        if not status.get('exists'):
+            log.debug('status does not exist')
+            # Simulate API call using a helper stub
+            api_data = request_collection_helper.get_collection_data(collection_id)
+            log.debug(f'api_data, ``{api_data}``')
+            if api_data:
+                html_content = f"""
+<div>
+    Number of items: {api_data["item_count"]}, Total size of all items: {api_data["total_size"]}
+</div>
+<button
+    hx-post="/request_collection/"
+    hx-vals='{{"collection_id": "{collection_id}"}}'
+    class="btn">
+    Start Download
+</button>
+"""
+                return HttpResponse(html_content)
+
+            return HttpResponse('<div class="alert">No collection data found.</div>', status=404)
+
+        return HttpResponse('<div class="alert">Unknown error occurred.</div>', status=500)
 
     ## end def request_collection()
 
@@ -83,29 +102,35 @@ def request_collection(request):
 #     """
 #     Handles Archive-It collection download requests.
 #     On GET, displays a form to input a collection ID.
-#     On POST, checks and initiates a download process.
+#     On POST, checks and initiates a download process and redirects to avoid resubmission issues.
 #     """
 #     log.debug('starting request_collection()')
+
 #     if request.method == 'GET':
-#         return render(request, 'request_collection.html', {'message': ''})
+#         # message = request.session.get('message', '')
+#         message = request.session.pop('message', '')
+#         return render(request, 'request_collection.html', {'message': message})
 
 #     elif request.method == 'POST':
 #         collection_id = request.POST.get('collection_id', '').strip()
+
 #         if not collection_id:
-#             return render(request, 'request_collection.html', {'message': 'Collection ID is required.'})
+#             request.session['message'] = 'Collection ID is required.'
+#             return redirect(request.path)
 
 #         log.debug(f'Received collection ID: {collection_id}')
-#         # Check if the collection is already downloaded or in-process
 #         status = request_collection_helper.check_collection_status(collection_id)
 
 #         if status.get('exists'):
-#             message = f'Collection {collection_id} is already downloaded or in process.'
-#             return render(request, 'request_collection.html', {'message': message})
+#             request.session['message'] = f'Collection {collection_id} is already downloaded or in process.'
+#             return redirect(request.path)
 
-#         # Initiate download if not already handled
+#         ## Initiate download if not already handled
 #         result = request_collection_helper.initiate_download(collection_id)
-#         message = result.get('message', f'Collection {collection_id} download initiated.')
-#         return render(request, 'request_collection.html', {'message': message})
+#         request.session['message'] = result.get('message', f'Collection {collection_id} download initiated.')
+#         return redirect(request.path)
+
+#     ## end def request_collection()
 
 
 # -------------------------------------------------------------------

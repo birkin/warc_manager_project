@@ -1,29 +1,24 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Request Archive-It Collection</title>
-    <!-- Link to the CSS -->
-    <link rel="stylesheet" href="{% static 'warc_manager_app/css/styles.css' %}"/>
+    <link rel="stylesheet" href="{% static 'warc_manager_app/css/styles.css' %}">
+    <script src="https://unpkg.com/htmx.org"></script>
 </head>
-
 <body>
     <header>
         Brown University Library
     </header>
     <h1>Request Archive-It Collection</h1>
-    <form method="post">
+    <form id="collection-form" hx-post="/request_collection/" hx-target="#response" hx-swap="innerHTML">
         {% csrf_token %}
         <label for="collection-id">Collection ID:</label>
         <input id="collection-id" name="collection_id" type="text">
         <button type="submit">Submit</button>
     </form>
-    {% if message %}
-    <div class="alert">({{ message }})</div>
-    {% endif %}
+    <div id="response" class="alert"></div>
 </body>
-
 </html>
