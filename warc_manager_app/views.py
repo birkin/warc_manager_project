@@ -61,6 +61,9 @@ def request_collection(request):
             log.debug('no collection_id')
             return HttpResponse('<div class="alert">Collection ID is required.</div>', status=200)
 
+        if request.POST.get('action') == 'really_start_download':
+            return HttpResponse('<div class="alert">Download started. <a href="/info/">More info</a></div>')
+
         status = request_collection_helper.check_collection_status(collection_id)
         log.debug(f'status, ``{status}``')
 
@@ -83,13 +86,16 @@ def request_collection(request):
 <div>
     Number of items: {api_data["item_count"]}, Total size of all items: {api_data["total_size"]}
 </div>
-<button
-    hx-post="/request_collection/"
-    hx-vals='{{"collection_id": "{collection_id}"}}'
-    hx-headers='{{"X-CSRFToken": "{csrf_token}"}}'
-    class="btn">
-    Start Download
-</button>
+<form hx-post="/request_collection/" hx-target="#response" hx-swap="innerHTML">  
+    <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
+    <input type="hidden" name="action" value="really_start_download">
+    <button
+        hx-post="/request_collection/"
+        hx-vals='{{"collection_id": "{collection_id}"}}'
+        class="btn">
+        Confirm start download
+    </button>
+</form>
 """
                 return HttpResponse(html_content)
 
