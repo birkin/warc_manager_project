@@ -78,6 +78,7 @@ def request_collection(request):
             api_data = request_collection_helper.get_collection_data(collection_id)
             log.debug(f'api_data, ``{api_data}``')
             if api_data:
+                csrf_token = request.COOKIES.get('csrftoken')
                 html_content = f"""
 <div>
     Number of items: {api_data["item_count"]}, Total size of all items: {api_data["total_size"]}
@@ -85,6 +86,7 @@ def request_collection(request):
 <button
     hx-post="/request_collection/"
     hx-vals='{{"collection_id": "{collection_id}"}}'
+    hx-headers='{{"X-CSRFToken": "{csrf_token}"}}'
     class="btn">
     Start Download
 </button>
