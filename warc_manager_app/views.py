@@ -50,8 +50,10 @@ def request_collection(request):
     """
     log.debug('starting request_collection()')
     if request.method == 'GET':
-        log.debug('GET request')
-        return render(request, 'request_collection.html')
+        log.debug('handling GET request')
+        recents: list = request_collection_helper.get_recent_collections()
+        context = {'recent_items': recents}
+        return render(request, 'request_collection.html', context)
 
     elif request.method == 'POST':
         log.debug('POST request')
