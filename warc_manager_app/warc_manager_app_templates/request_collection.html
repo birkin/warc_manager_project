@@ -16,7 +16,7 @@
     <main>
         <section class="form-section">
             <h2>Request Archive-It Collection</h2>
-            <form id="collection-form" hx-post="/request_collection/" hx-target="#response" hx-swap="innerHTML">
+            <form id="collection-form" hx-post="/hlpr_check_coll_id/" hx-target="#response" hx-swap="innerHTML">
                 {% csrf_token %}
                 <label for="collection-id">Collection ID:</label>
                 <input id="collection-id" name="collection_id" type="text" placeholder="Enter Collection ID">

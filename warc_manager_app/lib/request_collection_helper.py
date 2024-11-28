@@ -116,7 +116,7 @@ def render_alert(message: str, status: int = 200, include_info_link: bool = True
     """Returns an alert message with optional info link.
     Called by handle_post_request() in a variety of situations."""
     info_link = ' <a href="/info/">More info</a>' if include_info_link else ''
-    return HttpResponse(f'<div class="alert">{message}.{info_link}</div>', status=status)
+    return HttpResponse(f'<div class="alert">{message}{info_link}</div>', status=status)
 
 
 def check_collection_status(collection_id):

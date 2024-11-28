@@ -57,6 +57,18 @@ def request_collection(request: HttpRequest) -> HttpResponse:
     return resp
 
 
+def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
+    """
+    Handles request_collection() htmx check-id POST.
+    """
+    log.debug('starting hlpr_check_coll_id()')
+    ## check collection id ------------------------------------------
+    collection_id: str = request.POST.get('collection_id', '').strip()
+    if not collection_id:
+        log.debug('no collection_id')
+        return request_collection_helper.render_alert('Collection ID is required.', include_info_link=False)
+
+
 # def request_collection(request):
 #     """
 #     Handles Archive-It collection download requests via htmx.
