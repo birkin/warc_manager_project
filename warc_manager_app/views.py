@@ -60,6 +60,10 @@ def request_collection(request: HttpRequest) -> HttpResponse:
 def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
     """
     Handles request_collection() htmx check-id POST of the submitted collection-id.
+    - If collection-id is missing, an alert is returned.
+    - If the collection is in-progress or completed, an alert is returned.
+    - If the collection is not in-progress or completed, the download-confirmation form is returned.
+    - If the download-confirmation is returned, the job will be enqueued and an alert will be returned.
     """
     log.debug('starting hlpr_check_coll_id()')
     ## check collection id ------------------------------------------
@@ -83,9 +87,6 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
                 log.debug('hereA')
                 csrf_token = request.COOKIES.get('csrftoken')
                 log.debug('hereB')
-                # html_content = request_collection_helper.build_download_confirmation_form(
-                #     collection_overview_api_data, csrf_token
-                # )
                 html_content = request_collection_helper.render_download_confirmation_form(
                     collection_overview_api_data, collection_id, csrf_token
                 )
@@ -93,6 +94,20 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
                 return HttpResponse(html_content)
             else:
                 return request_collection_helper.render_alert('No collection data found.', status=404)
+
+
+def hlpr_initiate_download(request: HttpRequest) -> HttpResponse:
+    """
+    Handles request_collection() htmx confirm-download POST.
+    - If the confirm-download is received, the job will be enqueued and an alert will be returned.
+    """
+    log.debug('starting hlpr_initiate_download()')
+    collection_id = request.POST.get('collection_id', '').strip()
+    if request.POST.get('action') == 'really_start_download':
+        request_collection_helper.start_download(collection_id)
+        return request_collection_helper.render_alert('Download started')
+    else:
+        return HttpResponse(status=405)  # Method Not Allowed
 
 
 # def request_collection(request):

@@ -8,6 +8,7 @@ urlpatterns = [
     path('info/', views.info, name='info_url'),
     path('request_collection/', views.request_collection, name='request_collection_url'),
     path('hlpr_check_coll_id/', views.hlpr_check_coll_id, name='hlpr_check_coll_id_url'),
+    path('hlpr_initiate_download/', views.hlpr_initiate_download, name='hlpr_initiate_download_url'),
     ## other --------------------------------------------------------
     path('', views.root, name='root_url'),  # redirects to `info`
     path('admin/', admin.site.urls),

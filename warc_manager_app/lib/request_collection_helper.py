@@ -74,42 +74,42 @@ def get_recent_collections() -> list:
 ## POST request handler & helpers -----------------------------------
 
 
-def handle_post_request(request: HttpRequest) -> HttpResponse:
-    """
-    POST manager.
-    Called by views.request_collection()
-    Flow...
-    - check for collection_id; return alert if missing
-    - check collection status; return alert if in progress or completed
-    - get collection overview data; return alert if not found; return download confirmation form if found
-    - check for confirm start download; start download if confirmed
-    """
-    ## check collection id ------------------------------------------
-    # collection_id: str = request.POST.get('collection_id', '').strip()
-    # if not collection_id:
-    #     log.debug('no collection_id')
-    #     return render_alert('Collection ID is required.', include_info_link=False)
-    ## check collection status --------------------------------------
-    # status: dict = check_collection_status(collection_id)
-    # log.debug(f'status: {status}')
-    # resp: HttpResponse | None = handle_status(status)
-    # log.debug(f'collection status resp: {resp}')
-    # if resp:  # in-progress or completed
-    #     return resp
-    ## get collection overview data ---------------------------------
-    collection_overview_api_data: dict | None = get_collection_data(collection_id)
-    log.debug(f'api_data: {collection_overview_api_data}')
-    if collection_overview_api_data:
-        csrf_token: str | None = request.COOKIES.get('csrftoken')
-        return render_download_confirmation_form(collection_overview_api_data, collection_id, csrf_token)
-    else:
-        return render_alert('No collection data found.', status=404, include_info_link=False)
-    ## check for confirm start download -----------------------------
-    if request.POST.get('action') == 'really_start_download':
-        start_download(collection_id)
-        return render_alert('Download started')
+# def handle_post_request(request: HttpRequest) -> HttpResponse:
+#     """
+#     POST manager.
+#     Called by views.request_collection()
+#     Flow...
+#     - check for collection_id; return alert if missing
+#     - check collection status; return alert if in progress or completed
+#     - get collection overview data; return alert if not found; return download confirmation form if found
+#     - check for confirm start download; start download if confirmed
+#     """
+#     ## check collection id ------------------------------------------
+#     # collection_id: str = request.POST.get('collection_id', '').strip()
+#     # if not collection_id:
+#     #     log.debug('no collection_id')
+#     #     return render_alert('Collection ID is required.', include_info_link=False)
+#     ## check collection status --------------------------------------
+#     # status: dict = check_collection_status(collection_id)
+#     # log.debug(f'status: {status}')
+#     # resp: HttpResponse | None = handle_status(status)
+#     # log.debug(f'collection status resp: {resp}')
+#     # if resp:  # in-progress or completed
+#     #     return resp
+#     ## get collection overview data ---------------------------------
+#     collection_overview_api_data: dict | None = get_collection_data(collection_id)
+#     log.debug(f'api_data: {collection_overview_api_data}')
+#     if collection_overview_api_data:
+#         csrf_token: str | None = request.COOKIES.get('csrftoken')
+#         return render_download_confirmation_form(collection_overview_api_data, collection_id, csrf_token)
+#     else:
+#         return render_alert('No collection data found.', status=404, include_info_link=False)
+#     ## check for confirm start download -----------------------------
+#     if request.POST.get('action') == 'really_start_download':
+#         start_download(collection_id)
+#         return render_alert('Download started')
 
-    ## end def handle_post_request()
+#     ## end def handle_post_request()
 
 
 def render_alert(message: str, status: int = 200, include_info_link: bool = True) -> HttpResponse:
@@ -160,18 +160,37 @@ def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_t
     <div>
         Number of items: {api_data["item_count"]}, Total size of all items: {api_data["total_size"]}
     </div>
-    <form hx-post="/request_collection/" hx-target="#response" hx-swap="innerHTML">
+    <form hx-post="/hlpr_initiate_download/" hx-target="#response" hx-swap="innerHTML">
         <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
+        <input type="hidden" name="coll_id" value="{collection_id}">
         <input type="hidden" name="action" value="really_start_download">
         <button
-            hx-post="/request_collection/"
-            hx-vals='{{"collection_id": "{collection_id}"}}'
             class="btn">
             Confirm start download
         </button>
     </form>
     """
     return HttpResponse(html_content)
+
+
+# def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_token: str | None) -> HttpResponse:
+#     html_content = f"""
+#     <div>
+#         Number of items: {api_data["item_count"]}, Total size of all items: {api_data["total_size"]}
+#     </div>
+#     <form hx-post="/hlpr_initiate_download/" hx-target="#response" hx-swap="innerHTML">
+#         <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
+#         <input type="hidden" name="coll_id" value="{collection_id}">
+#         <input type="hidden" name="action" value="really_start_download">
+#         <button
+#             hx-post="/request_collection/"
+#             hx-vals='{{"collection_id": "{collection_id}"}}'
+#             class="btn">
+#             Confirm start download
+#         </button>
+#     </form>
+#     """
+#     return HttpResponse(html_content)
 
 
 def start_download(collection_id: str):
