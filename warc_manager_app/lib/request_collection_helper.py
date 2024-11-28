@@ -1,26 +1,16 @@
 # File: warc_manager_app/lib/helper.py
 import logging
 
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
+from django.http import HttpResponse
 
 log = logging.getLogger(__name__)
-
-
-## GET request handler & helper -------------------------------------
-
-
-def handle_get_request(request: HttpRequest) -> HttpResponse:
-    log.debug('handling GET request')
-    recents: list = get_recent_collections()
-    context = {'recent_items': recents}
-    return render(request, 'request_collection.html', context)
 
 
 def get_recent_collections() -> list:
     """
     Shows the recent collections.
     Dummy implementation for now.
+    Called by views.request_collection().
     """
     log.debug('Showing recent collections')
     # Dummy response
@@ -66,70 +56,38 @@ def get_recent_collections() -> list:
             'status': 'complete',
         },
     ]
-    # sort dict by date descending
+    ## sort dict by date descending
     dummy_data.sort(key=lambda x: x['date'], reverse=True)
     return dummy_data
 
 
-## POST request handler & helpers -----------------------------------
-
-
-# def handle_post_request(request: HttpRequest) -> HttpResponse:
-#     """
-#     POST manager.
-#     Called by views.request_collection()
-#     Flow...
-#     - check for collection_id; return alert if missing
-#     - check collection status; return alert if in progress or completed
-#     - get collection overview data; return alert if not found; return download confirmation form if found
-#     - check for confirm start download; start download if confirmed
-#     """
-#     ## check collection id ------------------------------------------
-#     # collection_id: str = request.POST.get('collection_id', '').strip()
-#     # if not collection_id:
-#     #     log.debug('no collection_id')
-#     #     return render_alert('Collection ID is required.', include_info_link=False)
-#     ## check collection status --------------------------------------
-#     # status: dict = check_collection_status(collection_id)
-#     # log.debug(f'status: {status}')
-#     # resp: HttpResponse | None = handle_status(status)
-#     # log.debug(f'collection status resp: {resp}')
-#     # if resp:  # in-progress or completed
-#     #     return resp
-#     ## get collection overview data ---------------------------------
-#     collection_overview_api_data: dict | None = get_collection_data(collection_id)
-#     log.debug(f'api_data: {collection_overview_api_data}')
-#     if collection_overview_api_data:
-#         csrf_token: str | None = request.COOKIES.get('csrftoken')
-#         return render_download_confirmation_form(collection_overview_api_data, collection_id, csrf_token)
-#     else:
-#         return render_alert('No collection data found.', status=404, include_info_link=False)
-#     ## check for confirm start download -----------------------------
-#     if request.POST.get('action') == 'really_start_download':
-#         start_download(collection_id)
-#         return render_alert('Download started')
-
-#     ## end def handle_post_request()
-
-
 def render_alert(message: str, status: int = 200, include_info_link: bool = True) -> HttpResponse:
-    """Returns an alert message with optional info link.
-    Called by handle_post_request() in a variety of situations."""
+    """
+    Returns an alert message with optional info link.
+    Called by htmx-post-handlers in views.hlpr_check_coll_id() and views.hlpr_initiate_download().
+    """
     info_link = ' <a href="/info/">More info</a>' if include_info_link else ''
-    return HttpResponse(f'<div class="alert">{message}{info_link}</div>', status=status)
+    # return HttpResponse(f'<div class="alert">{message}{info_link}</div>', status=status)
+    html_content = f'<div class="alert">{message}{info_link}</div>'
+    return HttpResponse(html_content, status=status)
 
 
 def check_collection_status(collection_id):
     """
     Checks if the collection is already downloaded or in progress.
     Dummy implementation for now.
+    Called by views.hlpr_check_coll_id().
     """
     log.debug(f'Checking status for collection ID: {collection_id}')
-    # Dummy response
+    ## dummy response for now
     return {'exists': False}  # Return True if exists or in progress
 
 
 def handle_status(status: dict) -> HttpResponse | None:
+    """
+    Handles the status of the collection.
+    Called by views.hlpr_check_coll_id().
+    """
     STATUS_MESSAGES: dict[str, str] = {
         'in_progress': 'Download in progress',
         'completed': 'Download completed',
@@ -147,15 +105,21 @@ def handle_status(status: dict) -> HttpResponse | None:
 
 def get_collection_data(collection_id):
     """
-    Gets the collection data for the given collection.
+    Gets the initialcollection data overview for the given collection.
     Dummy implementation for now.
+    Called by views.hlpr_check_coll_id().
     """
     log.debug(f'Getting data for collection ID: {collection_id}')
-    # Dummy response
+    ## dummy response
     return {'name': 'Test Collection', 'total_size': '1.2 GB', 'item_count': 1000}
 
 
-def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_token: str | None) -> HttpResponse:
+def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_token: str | None) -> str:
+    """
+    Preps html for the download confirmation form.
+    This is triggered by a previous htmx POST request that gets overview collection data
+    Called by views.hlpr_check_coll_id().
+    """
     html_content = f"""
     <div>
         Number of items: {api_data["item_count"]}, Total size of all items: {api_data["total_size"]}
@@ -170,10 +134,15 @@ def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_t
         </button>
     </form>
     """
-    return HttpResponse(html_content)
+    return html_content
 
 
 # def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_token: str | None) -> HttpResponse:
+#     """
+#     Preps html for the download confirmation form.
+#     This is triggered by a previous htmx POST request that gets overview collection data
+#     Called by views.hlpr_check_coll_id().
+#     """
 #     html_content = f"""
 #     <div>
 #         Number of items: {api_data["item_count"]}, Total size of all items: {api_data["total_size"]}
@@ -183,8 +152,6 @@ def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_t
 #         <input type="hidden" name="coll_id" value="{collection_id}">
 #         <input type="hidden" name="action" value="really_start_download">
 #         <button
-#             hx-post="/request_collection/"
-#             hx-vals='{{"collection_id": "{collection_id}"}}'
 #             class="btn">
 #             Confirm start download
 #         </button>
