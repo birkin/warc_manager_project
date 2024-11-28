@@ -59,7 +59,7 @@ def request_collection(request: HttpRequest) -> HttpResponse:
 
 def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
     """
-    Handles request_collection() htmx check-id POST.
+    Handles request_collection() htmx check-id POST of the submitted collection-id.
     """
     log.debug('starting hlpr_check_coll_id()')
     ## check collection id ------------------------------------------
@@ -67,6 +67,32 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
     if not collection_id:
         log.debug('no collection_id')
         return request_collection_helper.render_alert('Collection ID is required.', include_info_link=False)
+    else:
+        ## check for in-progress or completed -----------------------
+        status: dict = request_collection_helper.check_collection_status(collection_id)
+        log.debug(f'status: {status}')
+        resp: HttpResponse | None = request_collection_helper.handle_status(status)
+        log.debug(f'collection status resp: {resp}')
+        if resp:  # in-progress or completed
+            return resp
+        else:
+            ## get collection overview data --------------------------
+            collection_overview_api_data: dict | None = request_collection_helper.get_collection_data(collection_id)
+            log.debug(f'api_data: {collection_overview_api_data}')
+            if collection_overview_api_data:
+                log.debug('hereA')
+                csrf_token = request.COOKIES.get('csrftoken')
+                log.debug('hereB')
+                # html_content = request_collection_helper.build_download_confirmation_form(
+                #     collection_overview_api_data, csrf_token
+                # )
+                html_content = request_collection_helper.render_download_confirmation_form(
+                    collection_overview_api_data, collection_id, csrf_token
+                )
+                log.debug('hereC')
+                return HttpResponse(html_content)
+            else:
+                return request_collection_helper.render_alert('No collection data found.', status=404)
 
 
 # def request_collection(request):

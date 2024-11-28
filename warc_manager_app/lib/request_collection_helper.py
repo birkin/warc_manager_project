@@ -85,17 +85,17 @@ def handle_post_request(request: HttpRequest) -> HttpResponse:
     - check for confirm start download; start download if confirmed
     """
     ## check collection id ------------------------------------------
-    collection_id: str = request.POST.get('collection_id', '').strip()
-    if not collection_id:
-        log.debug('no collection_id')
-        return render_alert('Collection ID is required.', include_info_link=False)
+    # collection_id: str = request.POST.get('collection_id', '').strip()
+    # if not collection_id:
+    #     log.debug('no collection_id')
+    #     return render_alert('Collection ID is required.', include_info_link=False)
     ## check collection status --------------------------------------
-    status: dict = check_collection_status(collection_id)
-    log.debug(f'status: {status}')
-    resp: HttpResponse | None = handle_status(status)
-    log.debug(f'collection status resp: {resp}')
-    if resp:  # in-progress or completed
-        return resp
+    # status: dict = check_collection_status(collection_id)
+    # log.debug(f'status: {status}')
+    # resp: HttpResponse | None = handle_status(status)
+    # log.debug(f'collection status resp: {resp}')
+    # if resp:  # in-progress or completed
+    #     return resp
     ## get collection overview data ---------------------------------
     collection_overview_api_data: dict | None = get_collection_data(collection_id)
     log.debug(f'api_data: {collection_overview_api_data}')
