@@ -49,11 +49,11 @@ def request_collection(request: HttpRequest) -> HttpResponse:
     """
     log.debug('starting request_collection()')
     if request.method == 'GET':
-        resp = request_collection_helper.handle_get_request(request)
+        resp: HttpRequest = request_collection_helper.handle_get_request(request)
     elif request.method == 'POST':
-        resp = request_collection_helper.handle_post_request(request)
+        resp: HttpRequest = request_collection_helper.handle_post_request(request)
     else:
-        resp = HttpResponse(status=405)
+        resp = HttpResponse(status=405)  # Method Not Allowed
     return resp
 
 
