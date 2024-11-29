@@ -194,3 +194,9 @@ LOGGING = {
         # },
     },
 }
+
+
+## app-level settings -----------------------------------------------
+
+WASAPI_URL_ROOT = os.environ['WASAPI_URL_ROOT']
+WASAPI_KEY = os.environ['WASAPI_KEY']
