@@ -1,6 +1,8 @@
 # File: warc_manager_app/lib/helper.py
 import logging
 
+import httpx
+from django.conf import settings
 from django.http import HttpResponse
 
 log = logging.getLogger(__name__)
@@ -13,7 +15,6 @@ def get_recent_collections() -> list:
     Called by views.request_collection().
     """
     log.debug('Showing recent collections')
-    # Dummy response
     dummy_data = [
         {
             'date': '2024-09-01',
@@ -67,8 +68,7 @@ def render_alert(message: str, status: int = 200, include_info_link: bool = True
     Called by htmx-post-handlers in views.hlpr_check_coll_id() and views.hlpr_initiate_download().
     """
     info_link = ' <a href="/info/">More info</a>' if include_info_link else ''
-    # return HttpResponse(f'<div class="alert">{message}{info_link}</div>', status=status)
-    html_content = f'<div class="alert">{message}{info_link}</div>'
+    html_content = f'<div class="alert">{message} {info_link}</div>'
     return HttpResponse(html_content, status=status)
 
 
@@ -79,13 +79,12 @@ def check_collection_status(collection_id):
     Called by views.hlpr_check_coll_id().
     """
     log.debug(f'Checking status for collection ID: {collection_id}')
-    ## dummy response for now
     return {'exists': False}  # Return True if exists or in progress
 
 
 def handle_status(status: dict) -> HttpResponse | None:
     """
-    Handles the status of the collection.
+    Handles the status of the collection, determined in check_collection_statu().
     Called by views.hlpr_check_coll_id().
     """
     STATUS_MESSAGES: dict[str, str] = {
@@ -105,12 +104,19 @@ def handle_status(status: dict) -> HttpResponse | None:
 
 def get_collection_data(collection_id):
     """
-    Gets the initialcollection data overview for the given collection.
+    Gets the initial collection data overview for the given collection.
     Dummy implementation for now.
     Called by views.hlpr_check_coll_id().
     """
-    log.debug(f'Getting data for collection ID: {collection_id}')
-    ## dummy response
+    log.debug(f'getting data for collection ID: {collection_id}')
+    url = f'{settings.WASAPI_URL_ROOT}/collections/{collection_id}'
+    auth: httpx.BasicAuth = httpx.BasicAuth(username='finley', password=settings.WASAPI_KEY)
+    client: httpx.Client = httpx.Client(auth=auth)
+    resp: httpx.Response = client.get(url)
+    log.debug(f'resp = ``{resp}``')
+    log.debug(f'resp.content = ``{resp.content}``')
+    log.debug('hereZZ')
+
     return {'name': 'Test Collection', 'total_size': '1.2 GB', 'item_count': 1000}
 
 
