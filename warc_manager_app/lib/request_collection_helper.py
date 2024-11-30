@@ -1,6 +1,7 @@
 # File: warc_manager_app/lib/helper.py
 import logging
 import pprint
+from typing import Any, Dict, List, Optional
 
 import httpx
 from django.conf import settings
@@ -136,14 +137,15 @@ def get_collection_data(collection_id) -> dict | None:
             overview_data = None
         else:
             log.debug('data found')
-            overview_data: dict = parse_collection_data(resp)
+            # overview_data: dict = parse_collection_data(resp)
+            overview_data: dict = parse_collection_data(resp, client)
     else:
         log.debug('non-200 status, so setting overview_data to None')
         overview_data = None
     return overview_data
 
 
-def parse_collection_data(resp: httpx.Response) -> dict:
+def parse_collection_data(resp: httpx.Response, client: httpx.Client) -> dict:
     """
     Parses collection-data api response.
     Called by get_collection_data().
@@ -154,32 +156,55 @@ def parse_collection_data(resp: httpx.Response) -> dict:
     log.debug(f'data (first 1.5K chars), ``{pprint.pformat(data)[:1500]}``')
     log.debug(f'data.keys(), ``{data.keys()}``')
     log.debug(f'data.keys(), ``{pprint.pformat(data.keys())}``')
-    ## remove 'files' key (and associated value) from dict
-    if 'files' in data.keys():
-        data.pop('files')
-    log.debug(f'data (after removing `files`), ``{pprint.pformat(data)}``')
+    # ## remove 'files' key (and associated value) from dict
+    # if 'files' in data.keys():
+    #     data.pop('files')
+    # log.debug(f'data (after removing `files`), ``{pprint.pformat(data)}``')
+
+    initial_data: dict = data
+    all_files: List[str] = []
+    current_data: Dict[str, Any] = initial_data
+    current_url: Optional[str] = initial_data.get('next')
+
+    # Process the initial data
+    all_files.extend(current_data.get('files', []))
+    log.debug(f'number of files initially, ``{len(all_files)}``')
+
+    # Loop through the remaining pages using "next" links
+    while current_url:
+        response = client.get(current_url)
+        if response.status_code != 200:
+            raise RuntimeError(f'Failed to fetch data from {current_url}: {response.status_code}')
+
+        current_data = response.json()
+        all_files.extend(current_data.get('files', []))
+        current_url = current_data.get('next')
+
+    log.debug(f'Number of files: {len(all_files)}')
+    log.debug(f'First 5 files: {all_files[:5]}')
+
     data = {'total_size': '1.2 GB', 'item_count': 1000}
     return data
 
 
-# def get_collection_data(collection_id)
+# def parse_collection_data(resp: httpx.Response) -> dict:
 #     """
-#     Gets the initial collection data overview for the given collection.
-#     Dummy implementation for now.
-#     Called by views.hlpr_check_coll_id().
+#     Parses collection-data api response.
+#     Called by get_collection_data().
 #     """
-#     log.debug(f'getting data for collection ID: {collection_id}')
-#     url = f'{settings.WASAPI_URL_ROOT}/collections/{collection_id}'
-#     log.debug(f'url = ``{url}``')
-#     auth: httpx.BasicAuth = httpx.BasicAuth(username='finley', password=settings.WASAPI_KEY)
-#     client: httpx.Client = httpx.Client(auth=auth)
-#     resp: httpx.Response = client.get(url)
-#     log.debug(f'resp = ``{resp}``')
-#     log.debug(f'resp.__dict__ = ``{pprint.pformat(resp.__dict__)}``')
-#     log.debug(f'resp.content = ``{resp.content}``')
-#     log.debug('hereZZ')
+#     log.debug('starting parse_collection_data()')
+#     data = resp.json()
+#     # log.debug(f'data, ``{data}``')
+#     log.debug(f'data (first 1.5K chars), ``{pprint.pformat(data)[:1500]}``')
+#     log.debug(f'data.keys(), ``{data.keys()}``')
+#     log.debug(f'data.keys(), ``{pprint.pformat(data.keys())}``')
+#     ## remove 'files' key (and associated value) from dict
+#     if 'files' in data.keys():
+#         data.pop('files')
+#     log.debug(f'data (after removing `files`), ``{pprint.pformat(data)}``')
 
-#     return {'name': 'Test Collection', 'total_size': '1.2 GB', 'item_count': 1000}
+#     data = {'total_size': '1.2 GB', 'item_count': 1000}
+#     return data
 
 
 def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_token: str | None) -> str:
