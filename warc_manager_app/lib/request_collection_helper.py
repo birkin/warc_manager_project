@@ -119,15 +119,19 @@ def get_collection_data(collection_id) -> dict | None:
     auth: httpx.BasicAuth = httpx.BasicAuth(username=settings.WASAPI_USR, password=settings.WASAPI_KEY)
     client: httpx.Client = httpx.Client(auth=auth)
     resp: httpx.Response = client.get(url)
-    log.debug(f'resp.content, ``{resp.content}``')
+    # log.debug(f'resp.content, ``{resp.content}``')
     log.debug(f'resp = ``{resp}``')
-    log.debug(f'resp.__dict__ = ``{pprint.pformat(resp.__dict__)}``')
-    log.debug(f'resp.content = ``{resp.content}``')
+    elapsed_time: float = resp.elapsed.total_seconds()
+    log.debug(f'elapsed_time, ``{elapsed_time}`` seconds')
+    log.debug(f'type(elapsed_time), ``{type(elapsed_time)}``')
+    # log.debug(f'resp.__dict__ = ``{pprint.pformat(resp.__dict__)}``')
+    # log.debug(f'resp.content = ``{resp.content}``')
     log.debug('hereZZ')
     if resp.status_code == 200:
         log.debug('200 status, so evaluating json')
-        json_data = resp.json()
+        json_data: dict = resp.json()
         if json_data.get('count', 0) < 1:
+            log.debug(f'json_data for empty-count response, ``{pprint.pformat(json_data)}``')
             log.debug('no data found')
             overview_data = None
         else:
@@ -146,13 +150,19 @@ def parse_collection_data(resp: httpx.Response) -> dict:
     """
     log.debug('starting parse_collection_data()')
     data = resp.json()
-    log.debug(f'data, ``{data}``')
-
+    # log.debug(f'data, ``{data}``')
+    log.debug(f'data (first 1.5K chars), ``{pprint.pformat(data)[:1500]}``')
+    log.debug(f'data.keys(), ``{data.keys()}``')
+    log.debug(f'data.keys(), ``{pprint.pformat(data.keys())}``')
+    ## remove 'files' key (and associated value) from dict
+    if 'files' in data.keys():
+        data.pop('files')
+    log.debug(f'data (after removing `files`), ``{pprint.pformat(data)}``')
     data = {'total_size': '1.2 GB', 'item_count': 1000}
     return data
 
 
-# def get_collection_data(collection_id):
+# def get_collection_data(collection_id)
 #     """
 #     Gets the initial collection data overview for the given collection.
 #     Dummy implementation for now.
