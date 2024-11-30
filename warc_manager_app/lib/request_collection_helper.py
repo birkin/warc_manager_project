@@ -1,5 +1,6 @@
 # File: warc_manager_app/lib/helper.py
 import logging
+import pprint
 
 import httpx
 from django.conf import settings
@@ -62,7 +63,11 @@ def get_recent_collections() -> list:
     return dummy_data
 
 
-def render_alert(message: str, status: int = 200, include_info_link: bool = True) -> HttpResponse:
+def render_alert(
+    message: str,
+    include_info_link: bool = True,
+    status: int = 200,
+) -> HttpResponse:
     """
     Returns an alert message with optional info link.
     Called by htmx-post-handlers in views.hlpr_check_coll_id() and views.hlpr_initiate_download().
@@ -102,22 +107,62 @@ def handle_status(status: dict) -> HttpResponse | None:
         return render_alert('Unknown error occurred', status=500)
 
 
-def get_collection_data(collection_id):
+def get_collection_data(collection_id) -> dict | None:
     """
     Gets the initial collection data overview for the given collection.
     Dummy implementation for now.
     Called by views.hlpr_check_coll_id().
     """
     log.debug(f'getting data for collection ID: {collection_id}')
-    url = f'{settings.WASAPI_URL_ROOT}/collections/{collection_id}'
-    auth: httpx.BasicAuth = httpx.BasicAuth(username='finley', password=settings.WASAPI_KEY)
+    url = f'{settings.WASAPI_URL_ROOT}?collection={collection_id}'
+    log.debug(f'url = ``{url}``')
+    auth: httpx.BasicAuth = httpx.BasicAuth(username=settings.WASAPI_USR, password=settings.WASAPI_KEY)
     client: httpx.Client = httpx.Client(auth=auth)
     resp: httpx.Response = client.get(url)
     log.debug(f'resp = ``{resp}``')
+    log.debug(f'resp.__dict__ = ``{pprint.pformat(resp.__dict__)}``')
     log.debug(f'resp.content = ``{resp.content}``')
     log.debug('hereZZ')
+    if resp.status_code == 200:
+        log.debug('200 status, so parsing data')
+        overview_data: dict = parse_collection_data(resp)
+    else:
+        log.debug('non-200 status, so setting overview_data to None')
+        overview_data = None
+    return overview_data
 
-    return {'name': 'Test Collection', 'total_size': '1.2 GB', 'item_count': 1000}
+
+def parse_collection_data(resp: httpx.Response) -> dict:
+    """
+    Parses collection-data api response.
+    Called by get_collection_data().
+    """
+    log.debug('starting parse_collection_data()')
+    data = resp.json()
+    log.debug(f'data, ``{data}``')
+
+    data = {'total_size': '1.2 GB', 'item_count': 1000}
+    return data
+
+
+# def get_collection_data(collection_id):
+#     """
+#     Gets the initial collection data overview for the given collection.
+#     Dummy implementation for now.
+#     Called by views.hlpr_check_coll_id().
+#     """
+#     log.debug(f'getting data for collection ID: {collection_id}')
+#     url = f'{settings.WASAPI_URL_ROOT}/collections/{collection_id}'
+#     log.debug(f'url = ``{url}``')
+#     auth: httpx.BasicAuth = httpx.BasicAuth(username='finley', password=settings.WASAPI_KEY)
+#     client: httpx.Client = httpx.Client(auth=auth)
+#     resp: httpx.Response = client.get(url)
+#     log.debug(f'resp = ``{resp}``')
+#     log.debug(f'resp.__dict__ = ``{pprint.pformat(resp.__dict__)}``')
+#     log.debug(f'resp.content = ``{resp.content}``')
+#     log.debug('hereZZ')
+
+#     return {'name': 'Test Collection', 'total_size': '1.2 GB', 'item_count': 1000}
 
 
 def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_token: str | None) -> str:

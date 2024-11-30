@@ -85,6 +85,7 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
             collection_overview_api_data: dict | None = request_collection_helper.get_collection_data(collection_id)
             log.debug(f'api_data: {collection_overview_api_data}')
             if collection_overview_api_data:
+                log.debug('collection data found, so rending download confirmation form')
                 csrf_token = request.COOKIES.get('csrftoken')
                 ## return download confirmation form ----------------
                 html_content: str = request_collection_helper.render_download_confirmation_form(
@@ -92,7 +93,11 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
                 )
                 return HttpResponse(html_content)
             else:
-                return request_collection_helper.render_alert('No collection data found.', status=404)
+                log.debug('no collection data found, so rendering no-data-found alert')
+                resp: HttpResponse = request_collection_helper.render_alert(
+                    message='No collection data found.', include_info_link=False
+                )
+                return resp
 
 
 def hlpr_initiate_download(request: HttpRequest) -> HttpResponse:
