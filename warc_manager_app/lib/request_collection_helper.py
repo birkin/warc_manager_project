@@ -119,13 +119,20 @@ def get_collection_data(collection_id) -> dict | None:
     auth: httpx.BasicAuth = httpx.BasicAuth(username=settings.WASAPI_USR, password=settings.WASAPI_KEY)
     client: httpx.Client = httpx.Client(auth=auth)
     resp: httpx.Response = client.get(url)
+    log.debug(f'resp.content, ``{resp.content}``')
     log.debug(f'resp = ``{resp}``')
     log.debug(f'resp.__dict__ = ``{pprint.pformat(resp.__dict__)}``')
     log.debug(f'resp.content = ``{resp.content}``')
     log.debug('hereZZ')
     if resp.status_code == 200:
-        log.debug('200 status, so parsing data')
-        overview_data: dict = parse_collection_data(resp)
+        log.debug('200 status, so evaluating json')
+        json_data = resp.json()
+        if json_data.get('count', 0) < 1:
+            log.debug('no data found')
+            overview_data = None
+        else:
+            log.debug('data found')
+            overview_data: dict = parse_collection_data(resp)
     else:
         log.debug('non-200 status, so setting overview_data to None')
         overview_data = None
