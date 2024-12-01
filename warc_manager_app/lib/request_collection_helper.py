@@ -190,7 +190,7 @@ def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_t
     <div>
         Number of items: {api_data["item_count"]}, Total size of all items: {api_data['total_size']}
     </div>
-    <form hx-post="/hlpr_initiate_download/" hx-target="#response" hx-swap="innerHTML">
+    <form id="confirm_download" hx-post="/hlpr_initiate_download/" hx-target="#response" hx-swap="innerHTML">
         <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
         <input type="hidden" name="coll_id" value="{collection_id}">
         <input type="hidden" name="action" value="really_start_download">

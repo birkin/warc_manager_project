@@ -31,13 +31,18 @@ footer {
     margin-top: 1rem;
 }
 
-/* Form Section */
+/* form Section */
 .form-section {
     background: #fff;
     padding: 1.5rem;
     margin-bottom: 2rem;
     border-radius: 0.5rem;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* for the "Confirm start download" button */
+form#confirm_download {
+    margin-top: .5rem;
 }
 
 input {
@@ -49,6 +54,7 @@ input {
     max-width: 300px;
 }
 
+/* main "Submit" button */
 .btn-primary {
     background-color: maroon;
     color: white;
@@ -63,8 +69,8 @@ input {
 }
 
 .alert {
-    margin-top: 1rem;
-    padding: 0.5rem;
+    margin-top: .5rem;
+    padding: 0.3rem;
     color: maroon;
 }
 
