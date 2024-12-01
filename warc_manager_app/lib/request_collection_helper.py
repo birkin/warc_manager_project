@@ -151,60 +151,33 @@ def parse_collection_data(resp: httpx.Response, client: httpx.Client) -> dict:
     Called by get_collection_data().
     """
     log.debug('starting parse_collection_data()')
-    data = resp.json()
-    # log.debug(f'data, ``{data}``')
+    data: dict = resp.json()
     log.debug(f'data (first 1.5K chars), ``{pprint.pformat(data)[:1500]}``')
     log.debug(f'data.keys(), ``{data.keys()}``')
     log.debug(f'data.keys(), ``{pprint.pformat(data.keys())}``')
-    # ## remove 'files' key (and associated value) from dict
-    # if 'files' in data.keys():
-    #     data.pop('files')
-    # log.debug(f'data (after removing `files`), ``{pprint.pformat(data)}``')
-
-    initial_data: dict = data
+    ## set up files holder ------------------------------------------
     all_files: List[str] = []
-    current_data: Dict[str, Any] = initial_data
-    current_url: Optional[str] = initial_data.get('next')
-
-    # Process the initial data
+    current_data: Dict[str, Any] = data
+    ## store existing files -----------------------------------------
     all_files.extend(current_data.get('files', []))
     log.debug(f'number of files initially, ``{len(all_files)}``')
-
-    # Loop through the remaining pages using "next" links
-    while current_url:
-        response = client.get(current_url)
+    ## loop through the remaining pages using "next" links ----------
+    next_url: Optional[str] = data.get('next')
+    while next_url:
+        response = client.get(next_url)
         if response.status_code != 200:
-            raise RuntimeError(f'Failed to fetch data from {current_url}: {response.status_code}')
-
+            raise RuntimeError(f'Failed to fetch data from ``{next_url}``: ``{response.status_code}``')
         current_data = response.json()
         all_files.extend(current_data.get('files', []))
-        current_url = current_data.get('next')
-
+        next_url = current_data.get('next')
+    ## go through the files and get the total size ------------------
     log.debug(f'Number of files: {len(all_files)}')
     log.debug(f'First 5 files: {all_files[:5]}')
+    total_size_in_bytes: int = sum([file['size'] for file in all_files])
+
 
     data = {'total_size': '1.2 GB', 'item_count': 1000}
     return data
-
-
-# def parse_collection_data(resp: httpx.Response) -> dict:
-#     """
-#     Parses collection-data api response.
-#     Called by get_collection_data().
-#     """
-#     log.debug('starting parse_collection_data()')
-#     data = resp.json()
-#     # log.debug(f'data, ``{data}``')
-#     log.debug(f'data (first 1.5K chars), ``{pprint.pformat(data)[:1500]}``')
-#     log.debug(f'data.keys(), ``{data.keys()}``')
-#     log.debug(f'data.keys(), ``{pprint.pformat(data.keys())}``')
-#     ## remove 'files' key (and associated value) from dict
-#     if 'files' in data.keys():
-#         data.pop('files')
-#     log.debug(f'data (after removing `files`), ``{pprint.pformat(data)}``')
-
-#     data = {'total_size': '1.2 GB', 'item_count': 1000}
-#     return data
 
 
 def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_token: str | None) -> str:
