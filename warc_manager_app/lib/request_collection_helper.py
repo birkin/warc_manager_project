@@ -171,12 +171,12 @@ def parse_collection_data(resp: httpx.Response, client: httpx.Client) -> dict:
         all_files.extend(current_data.get('files', []))
         next_url = current_data.get('next')
     ## go through the files and get the total size ------------------
-    log.debug(f'Number of files: {len(all_files)}')
+    file_count: int = len(all_files)
+    log.debug(f'file_count, ``{file_count}``')
     log.debug(f'First 5 files: {all_files[:5]}')
     total_size_in_bytes: int = sum([file['size'] for file in all_files])
-
-
-    data = {'total_size': '1.2 GB', 'item_count': 1000}
+    total_size_gb: float = total_size_in_bytes / (1024**3)
+    data = {'total_size': f'{total_size_gb:.2f} GB', 'item_count': file_count}
     return data
 
 
@@ -188,7 +188,7 @@ def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_t
     """
     html_content = f"""
     <div>
-        Number of items: {api_data["item_count"]}, Total size of all items: {api_data["total_size"]}
+        Number of items: {api_data["item_count"]}, Total size of all items: {api_data['total_size']}
     </div>
     <form hx-post="/hlpr_initiate_download/" hx-target="#response" hx-swap="innerHTML">
         <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
