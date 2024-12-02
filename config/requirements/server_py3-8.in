@@ -1,0 +1,2 @@
+-r base_py3-8.txt
+mysqlclient~=2.1.0
