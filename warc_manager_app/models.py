@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.conf import settings
 
 
 class Collection(models.Model):
@@ -17,3 +18,18 @@ class Collection(models.Model):
 
     def __str__(self):
         return self.collection_id
+
+
+class UserProfile(models.Model):
+    """
+    This extends the User object to include additional fields.
+
+    This webapp is set up to auto-create a UserProfile record when a User record is created.
+    See the README for more info about that.
+    """
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    can_initiate_downloads = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username}'s profile"

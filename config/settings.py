@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'warc_manager_app',
+    # 'warc_manager_app',
+    'warc_manager_app.apps.WarcManagerAppConfig',
 ]
 
 MIDDLEWARE = [
