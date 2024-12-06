@@ -199,6 +199,8 @@ LOGGING = {
 
 ## app-level settings -----------------------------------------------
 
+TEST_SHIB_META_DCT = json.loads(os.environ['TEST_SHIB_META_DCT_JSON'])
+
 WASAPI_URL_ROOT = os.environ['WASAPI_URL_ROOT']
 WASAPI_USR = os.environ['WASAPI_USR']
 WASAPI_KEY = os.environ['WASAPI_KEY']

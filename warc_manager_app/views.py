@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from warc_manager_app.lib import request_collection_helper, version_helper
+from warc_manager_app.lib.shib_handler import shib_decorator
 from warc_manager_app.lib.version_helper import GatherCommitAndBranchData
 
 log = logging.getLogger(__name__)
@@ -43,6 +44,7 @@ def info(request):
     return resp
 
 
+@shib_decorator
 def request_collection(request: HttpRequest) -> HttpResponse:
     """
     Displays main page for requesting collection downloads.
@@ -59,6 +61,7 @@ def request_collection(request: HttpRequest) -> HttpResponse:
     return resp
 
 
+@shib_decorator
 def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
     """
     Handles request_collection() htmx check-id POST of the submitted collection-id.
@@ -100,6 +103,7 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
                 return resp
 
 
+@shib_decorator
 def hlpr_initiate_download(request: HttpRequest) -> HttpResponse:
     """
     Handles request_collection() htmx confirm-download POST.
