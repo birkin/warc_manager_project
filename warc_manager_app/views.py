@@ -4,6 +4,7 @@ import logging
 
 import trio
 from django.conf import settings as project_settings
+from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -44,24 +45,50 @@ def info(request):
     return resp
 
 
+@shib_decorator
 def login(request):
     """
-    The login view.
+    Handles authentication and initial authorization (lib-staff) via shib. Then:
+    - On successful authorization, logs user in and redirects to the `next_url`.
+        - If no `next_url`, redirects to the `info` page.
+    Called automatically by attempting to access an `@login_required` view.
     """
-    log.debug('starting login()')
-    return HttpResponse('comming')
+    log.debug('\n\nstarting shib_login()')
+    next_url = request.GET.get('next', None)
+    log.debug(f'next_url, ```{next_url}```')
+    if not next_url:
+        log.debug(f'session_keys, ```{list( request.session.keys() )}```')
+        if request.session.get('redirect_url', None):
+            redirect_url = request.session['redirect_url']
+        else:
+            # redirect_url = reverse( 'editor_index_url' )
+            redirect_url = reverse('info_url')
+    else:
+        redirect_url = request.GET['next']  # may be same page
+    if request.session.get('redirect_url', None):  # cleanup
+        request.session.pop('redirect_url', None)
+    log.debug('redirect_url, ```%s```' % redirect_url)
+    return HttpResponseRedirect(redirect_url)
 
 
-@shib_decorator
+@login_required
 def request_collection(request: HttpRequest) -> HttpResponse:
     """
     Displays main page for requesting collection downloads.
     """
     log.debug('starting request_collection()')
+    log.debug(f'user-authenticated-check, ``{request.user.is_authenticated}``')
+    if request.user.is_authenticated:
+        ## get user's first name
+        user_first_name = request.user.first_name
+        context = {'is_logged_in': 'yes', 'username': user_first_name}
+    else:
+        context = {'is_logged_in': 'no'}
     if request.method == 'GET':
         log.debug('handling GET request')
         recents: list = request_collection_helper.get_recent_collections()
-        context = {'recent_items': recents}
+        # context = {'recent_items': recents}
+        context['recent_items'] = recents
         return render(request, 'request_collection.html', context)
     else:
         ## htmx POSTs are handled by the helper functions below
@@ -69,7 +96,7 @@ def request_collection(request: HttpRequest) -> HttpResponse:
     return resp
 
 
-@shib_decorator
+@login_required
 def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
     """
     Handles request_collection() htmx check-id POST of the submitted collection-id.
@@ -111,7 +138,7 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
                 return resp
 
 
-@shib_decorator
+@login_required
 def hlpr_initiate_download(request: HttpRequest) -> HttpResponse:
     """
     Handles request_collection() htmx confirm-download POST.
