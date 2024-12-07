@@ -44,6 +44,14 @@ def info(request):
     return resp
 
 
+def login(request):
+    """
+    The login view.
+    """
+    log.debug('starting login()')
+    return HttpResponse('comming')
+
+
 @shib_decorator
 def request_collection(request: HttpRequest) -> HttpResponse:
     """
