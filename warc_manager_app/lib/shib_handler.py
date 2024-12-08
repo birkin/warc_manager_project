@@ -22,6 +22,7 @@ def shib_decorator(func):
     - If user is successfully provisioned, logs user in and calls view.
     Called by views.abc()
     """
+    log.debug('starting shib_decorator()')
 
     @wraps(func)  # all this does is preserves function metadata
     def wrapper(request, *args, **kwargs):
