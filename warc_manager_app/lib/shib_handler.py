@@ -28,7 +28,7 @@ def shib_decorator(func: Callable[..., HttpResponse]) -> Callable[..., HttpRespo
     """
     log.debug('starting shib_decorator()')
 
-    @wraps(func)  # all this does is preserves function metadata
+    @wraps(func)  # all this line does is preserves function metadata
     def wrapper(request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         log.debug('starting shib_decorator wrapper()')
         ## if user's already authenticated, just call the view ------
