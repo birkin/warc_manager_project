@@ -11,25 +11,16 @@
 </head>
 <body>
 
-<!-- 
-    <header>
-        <h1>Brown University Library</h1>
-    </header>
- -->
 
-    <header>
-        <h1>Brown University Library
-            {% if is_logged_in == 'yes' %}
-                <span class='user-auth-info'>
-                    Welcome, {{ username }} — (<a href='http://127.0.0.1:8000/logout/'>logout</a>)
-                </span>
-            {% else %}
-                <span class='user-auth-info'>
-                    <a href='http://127.0.0.1:8000/logout/'>Login</a>
-                </span>
-            {% endif %}
-        </h1>
-    </header>
+ <header>
+    <div class="header-content">
+        <h1>Brown University Library</h1>
+        {% if username %}
+        <span class="welcome-text">Welcome {{ username }}</span>
+        {% endif %}
+    </div>
+</header>
+
 
     <main>
         <section class="form-section">
