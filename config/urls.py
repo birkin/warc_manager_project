@@ -7,6 +7,7 @@ urlpatterns = [
     ## main ---------------------------------------------------------
     path('info/', views.info, name='info_url'),
     path('login/', views.login, name='login_url'),
+    path('logout/', views.logout, name='logout_url'),
     path('request_collection/', views.request_collection, name='request_collection_url'),
     path('hlpr_check_coll_id/', views.hlpr_check_coll_id, name='hlpr_check_coll_id_url'),
     path('hlpr_initiate_download/', views.hlpr_initiate_download, name='hlpr_initiate_download_url'),

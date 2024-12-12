@@ -71,6 +71,14 @@ def login(request):
     return HttpResponseRedirect(redirect_url)
 
 
+def logout(request):
+    """
+    Logs user out and redirects to the `info` page.
+    """
+    log.debug('starting logout()')
+    return HttpResponseRedirect(reverse('info_url'))
+
+
 @login_required
 def request_collection(request: HttpRequest) -> HttpResponse:
     """
