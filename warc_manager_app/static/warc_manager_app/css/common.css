@@ -6,7 +6,7 @@ head, body, form, label, input, button, table, th, td {
 
 html {
     background-color: white;
-    padding-top: .1em;
+    padding-top: .1em;  /* keeps maroon of header from bleeding into the browser interface */
 }
 
  /* --- header CSS start --- */
