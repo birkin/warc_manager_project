@@ -1,24 +1,44 @@
 import uuid
 
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class Collection(models.Model):
+    """
+    For reference:
+    - null=True means the field is allowed to be empty in the database.
+    - blank=True means the field is allowed to be empty in forms (including the admin).
+    """
+
+    STATUS_CHOICES = (  # used by the status field; the first value is stored in the db
+        ('NEW', 'New download requested'),
+        ('ADD', 'Download additions requested'),
+        ('INP', 'In Progress'),
+        ('PAU', 'Paused'),
+        ('COM', 'Complete'),
+    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    collection_id = models.CharField(max_length=50, unique=True)
-    item_count = models.IntegerField()
-    size_in_bytes = models.BigIntegerField()
-    notes = models.TextField()
-    status = models.TextChoices('status', 'QUERIED QUEUED_FOR_START QUEUED_FOR_REDO IN_PROGRESS PAUSED COMPLETE')
-    all_files = models.JSONField()  # list; will likely eventually become a separate File model
-    errors = models.BooleanField()
+    collection_id = models.CharField(
+        max_length=50,
+        unique=True,
+    )
+    item_count = models.IntegerField(blank=True)
+    size_in_bytes = models.BigIntegerField(blank=True, null=True)
+    notes = models.TextField(default='', blank=True)
+    status = models.CharField(max_length=3, choices=STATUS_CHOICES, blank=True, null=True)
+    status_history = models.JSONField(default=list, blank=True)  # list of status changes
+    all_files = models.JSONField(default=list, blank=True)  # list; will likely eventually become a separate File model
+    errors = models.BooleanField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def size_in_gigabytes(self) -> float:
-        return round(self.size_in_bytes / (1024 ** 3), 2)
+        """
+        Allows usage like `collection.size_in_gigabytes` to get the size in GB
+        """
+        return round(self.size_in_bytes / (1024**3), 2)
 
     def __str__(self):
         return self.collection_id
@@ -26,7 +46,7 @@ class Collection(models.Model):
 
 class UserProfile(models.Model):
     """
-    This extends the User object to include additional fields.
+    Extends the User object to include additional fields.
 
     This webapp is set up to auto-create a UserProfile record when a User record is created.
     See the README for more info about that.
