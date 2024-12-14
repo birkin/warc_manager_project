@@ -1,0 +1,43 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Webapp to configure upload-apps for BDR deposits">
+    <meta name="author" content="Brown University Library">
+    {% if title %}
+    <title>{{ title }}</title>
+    {% else %}
+    <title>BUL WARC manager</title>
+    {% endif %}
+    <script src="https://unpkg.com/htmx.org"></script>
+    {% block header_other %}
+    {% endblock header_other %}
+</head>
+
+<body>
+
+    <header>
+        <div class="header-content">
+            <h1>Brown University Library</h1>
+            {% if username %}
+            <span class="welcome-text">Welcome {{ username }} / <a href="{% url 'logout_url' %}">Logout</a></span>
+            {% endif %}
+        </div>
+    </header>
+
+    <main>
+
+        {% block main_content %}
+        {% endblock main_content %}
+
+        <hr/>
+
+    </main>
+    
+</body>
+
+</html>
