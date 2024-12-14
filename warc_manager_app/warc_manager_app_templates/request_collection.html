@@ -1,28 +1,19 @@
+{% extends "base.html" %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Request Archive-It Collection</title>
-    <link rel="stylesheet" href="{% static 'warc_manager_app/css/styles.css' %}">
-    <script src="https://unpkg.com/htmx.org"></script>
-</head>
-<body>
+<!-- html -->
 
+<!-- head -->
+<!-- /head -->
 
- <header>
-    <div class="header-content">
-        <h1>Brown University Library</h1>
-        {% if username %}
-        <span class="welcome-text">Welcome {{ username }} / <a href="{% url 'logout_url' %}">Logout</a></span>
-        {% endif %}
-    </div>
-</header>
+<!-- body -->
 
+    <!-- header -->
+    <!-- /header -->
 
-    <main>
+    <!-- main -->
+    {% block main_content %}
+    
         <section class="form-section">
             <h2>Request Archive-It Collection</h2>
             <form id="collection-form" hx-post="/hlpr_check_coll_id/" hx-target="#response" hx-swap="innerHTML">
@@ -33,6 +24,7 @@
             </form>
             <div id="response" class="alert"></div>
         </section>
+
         <section class="recent-items-section">
             <h2>Recent Items</h2>
             <table class="styled-table">
@@ -60,14 +52,11 @@
                 </tbody>
             </table>
         </section>
-    </main>
 
-    <hr />
-<!-- 
-    <footer>
-        <p>© 2024 Brown University Library</p>
-    </footer>
--->
+    {% endblock main_content %}
+    <!-- /main -->
+    
+<!-- /body -->
 
-</body>
-</html>
+<!-- /html -->
+    
