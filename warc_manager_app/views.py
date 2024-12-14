@@ -87,7 +87,7 @@ def pre_login(request):
         full_request_collection_url = f'{request.scheme}://{request.get_host()}{reverse("request_collection_url")}'
         log.debug(f'full_request_collection_url, ``{full_request_collection_url}``')
         encoded_full_request_collection_url = parse.quote(full_request_collection_url, safe='')
-        redirect_url = f'{project_settings.SHIB_SP_LOGIN_URL}?next={encoded_full_request_collection_url}'
+        redirect_url = f'{project_settings.SHIB_SP_LOGIN_URL}?target={encoded_full_request_collection_url}'
     log.debug(f'redirect_url, ``{redirect_url}``')
     return HttpResponseRedirect(redirect_url)
 
