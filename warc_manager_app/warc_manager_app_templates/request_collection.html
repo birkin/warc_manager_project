@@ -4,6 +4,9 @@
 <!-- html -->
 
 <!-- head -->
+    {% block header_other %}
+    <link rel="stylesheet" href="{% static 'warc_manager_app/css/request_collection.css' %}">
+    {% endblock header_other %}
 <!-- /head -->
 
 <!-- body -->
@@ -13,7 +16,7 @@
 
     <!-- main -->
     {% block main_content %}
-    
+
         <section class="form-section">
             <h2>Request Archive-It Collection</h2>
             <form id="collection-form" hx-post="/hlpr_check_coll_id/" hx-target="#response" hx-swap="innerHTML">

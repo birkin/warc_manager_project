@@ -1,0 +1,88 @@
+/* General styles */
+
+head, body, form, label, input, button, table, th, td {
+    font-family: Verdana, sans-serif; /* Verdana font */
+}
+
+
+ /* --- header CSS start --- */
+
+header {
+    background-color: maroon;
+    color: white;
+    /* padding: .25rem 1rem; */
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    padding-left: 1rem;
+    padding-right: 1.5rem;
+    text-align: left; /* Keep this so h1 is still aligned left in the flex container */
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.header-content h1 {
+    margin: 0; /* Ensure no extra margin that might misalign baseline */
+    font-size: 1.75rem; /* Adjust as needed for your main title size */
+}
+
+.welcome-text {
+    color: white;
+    font-size: 1rem; /* Smaller than the h1 text */
+    margin: 0; /* Ensure alignment is nice and neat */
+}
+
+header.span.href {
+    color: white;
+    text-decoration: none;
+}
+
+/* unvisited link */
+a.login_logout:link {
+    color: white;
+}
+  
+/* visited link */
+a.login_logout:visited {
+    color: white;
+}
+
+/* mouse over link */
+a.login_logout.login_logout:hover {
+    color: orange;
+}
+
+/* selected link */
+a.login_logout:active {
+    color: white;
+}  
+
+/* --- header CSS end --- */
+
+
+body {
+    font-family: 'Verdana', sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+
+main {
+    padding: 1rem;
+}
+
+
+/* for login / logout text-links in header */
+
+/* 
+.user-auth-info {
+    float: right;
+    font-size: 1rem;
+    margin-right: 1rem;
+} 
+*/
