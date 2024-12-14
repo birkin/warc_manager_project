@@ -61,6 +61,10 @@ def pre_login(request):
             - Redirects to the IDP-shib-login-url.
     """
     log.debug('\n\nstarting pre_login()')
+    if request.get_host() in ['127.0.0.1:8000']:  # eases local development
+        log.debug('skipping shib stuff for local development')
+        redirect_url = reverse('request_collection_url')
+        return HttpResponseRedirect(redirect_url)
     ## check for session "logout_status" ----------------------------
     logout_status = request.session.get('logout_status', None)
     log.debug(f'logout_status, ``{logout_status}``')
@@ -85,7 +89,7 @@ def pre_login(request):
         encoded_full_request_collection_url = parse.quote(full_request_collection_url, safe='')
         redirect_url = f'{project_settings.SHIB_IDP_LOGIN_URL}?next={encoded_full_request_collection_url}'
     log.debug(f'redirect_url, ``{redirect_url}``')
-    return HttpResponse('coming')
+    return HttpResponseRedirect(redirect_url)
 
     ## end def pre_login()
 
