@@ -1,40 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Information Page - {{ message }}</title>
-    <meta name="description" content="Detailed information about {{ topic }}.">
-    <style>
-        body {
-            font-family: 'Trebuchet MS', sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            height: 100vh;
-            font-size: 1rem;
-        }
-        .container {
-            background-color: #fff;
-            padding: 1.25rem; /* Equivalent to 20px if base font-size is 16px */
-            border-radius: 0.5rem;
-            box-shadow: 0 0 0.625rem rgba(0, 0, 0, 0.1);
-            width: 80%;
-            max-width: 37.5rem;
-            margin: calc(100vh / 4) auto 0 auto;
-        }
-        .parenthetical {
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 2rem;
-            font-style: italic;
-        }
-    </style>
-</head>
-<body>
-    <main class="container">
-        <h1>“{{ quote }}”</h1>
-        <h1>— {{ author }}</h1>
-        <p class="parenthetical">(Add "?format=json" to this url to see the data sent to the page.)</p>
-    </main>
-</body>
-</html>
+{% extends "base.html" %}
+{% load static %}
+<!-- Template for templates 🙂
+     The html comments just help remember the overall structure of the page. -->
+
+<!-- html -->
+
+<!-- head -->
+{% block title %}
+<title>BUL WARC info</title>
+{% endblock title %}
+
+{% block header_other %}  <!-- custom-page CSS can go in here-->
+{% endblock header_other %}
+<!-- /head -->
+
+<!-- body -->
+
+    <!-- header -->
+    <!-- /header -->
+
+    <!-- main -->
+    {% block main_content %}
+    <div class="info-section">
+        <h2>Information</h2>
+        <p>This webapp is used to configure upload-apps for BDR deposits.</p>
+        <p>It is a Django app that uses the Django admin interface to manage the configuration of upload-apps.</p>
+        <p>It is a work in progress and is not yet ready for production use.</p>
+    </div>
+    {% endblock main_content %}
+    <!-- /main -->
+
+<!-- /body -->
+
+<!-- /html -->

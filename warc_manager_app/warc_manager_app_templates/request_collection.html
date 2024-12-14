@@ -4,9 +4,13 @@
 <!-- html -->
 
 <!-- head -->
-    {% block header_other %}
-    <link rel="stylesheet" href="{% static 'warc_manager_app/css/request_collection.css' %}">
-    {% endblock header_other %}
+{% block title %}
+<title>BUL WARC download-collection</title>
+{% endblock title %}
+
+{% block header_other %}
+<link rel="stylesheet" href="{% static 'warc_manager_app/css/request_collection.css' %}">
+{% endblock header_other %}
 <!-- /head -->
 
 <!-- body -->
