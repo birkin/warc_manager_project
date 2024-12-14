@@ -50,25 +50,19 @@ def info(request):
 @shib_decorator
 def login(request):
     """
-    Handles authentication and initial authorization (lib-staff) via shib. Then:
+    Handles authentication and initial authorization (lib-staff) via shib, via the decorator.
+    Then:
     - On successful authorization, logs user in and redirects to the `next_url`.
         - If no `next_url`, redirects to the `info` page.
     Called automatically by attempting to access an `@login_required` view.
     """
-    log.debug('\n\nstarting shib_login()')
-    next_url = request.GET.get('next', None)
+    log.debug('\n\nstarting login()')
+    next_url: str | None = request.GET.get('next', None)
     log.debug(f'next_url, ```{next_url}```')
     if not next_url:
-        log.debug(f'session_keys, ```{list( request.session.keys() )}```')
-        if request.session.get('redirect_url', None):
-            redirect_url = request.session['redirect_url']
-        else:
-            # redirect_url = reverse( 'editor_index_url' )
-            redirect_url = reverse('info_url')
+        redirect_url = reverse('info_url')
     else:
         redirect_url = request.GET['next']  # may be same page
-    if request.session.get('redirect_url', None):  # cleanup
-        request.session.pop('redirect_url', None)
     log.debug('redirect_url, ```%s```' % redirect_url)
     return HttpResponseRedirect(redirect_url)
 
