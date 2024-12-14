@@ -8,11 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Webapp to configure upload-apps for BDR deposits">
     <meta name="author" content="Brown University Library">
-    {% if title %}
-    <title>{{ title }}</title>
-    {% else %}
+    {% block title %}
     <title>BUL WARC manager</title>
-    {% endif %}
+    {% endblock title %}
     <link rel="stylesheet" href="{% static 'warc_manager_app/css/common.css' %}">
     <script src="https://unpkg.com/htmx.org"></script>
     {% block header_other %}
@@ -26,6 +24,8 @@
             <h1>Brown University Library</h1>
             {% if username %}
             <span class="welcome-text">Welcome {{ username }} / <a class="login_logout" href="{% url 'logout_url' %}">Logout</a></span>
+            {% else %}
+            <span class="welcome-text"><a class="login_logout" href="{% url 'login_url' %}">Staff Login</a></span>
             {% endif %}
         </div>
     </header>
