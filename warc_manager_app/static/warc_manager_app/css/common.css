@@ -4,6 +4,10 @@ head, body, form, label, input, button, table, th, td {
     font-family: Verdana, sans-serif; /* Verdana font */
 }
 
+html {
+    background-color: white;
+    padding-top: .1em;
+}
 
  /* --- header CSS start --- */
 
