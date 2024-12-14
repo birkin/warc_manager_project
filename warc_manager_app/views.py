@@ -78,7 +78,6 @@ def pre_login(request):
         log.debug(f'full_pre_login_url, ``{full_pre_login_url}``')
         encoded_full_pre_login_url = parse.quote(full_pre_login_url, safe='')
         redirect_url = f'{project_settings.SHIB_IDP_LOGOUT_URL}?return={encoded_full_pre_login_url}'
-        log.debug(f'redirect_url, ``{redirect_url}``')
     else:  # request.session['logout_status'] _is_ found -- eaning user is back after hitting the IDP-shib-logout-url
         ## clear logout_status --------------------------------------
         del request.session['logout_status']
