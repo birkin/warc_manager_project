@@ -11,10 +11,14 @@ class Collection(models.Model):
     size_in_bytes = models.BigIntegerField()
     notes = models.TextField()
     status = models.TextChoices('status', 'QUERIED QUEUED_FOR_START QUEUED_FOR_REDO IN_PROGRESS PAUSED COMPLETE')
-    all_files = models.JSONField()  # list; will likely become a separate File model
+    all_files = models.JSONField()  # list; will likely eventually become a separate File model
     errors = models.BooleanField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def size_in_gigabytes(self) -> float:
+        return round(self.size_in_bytes / (1024 ** 3), 2)
 
     def __str__(self):
         return self.collection_id
