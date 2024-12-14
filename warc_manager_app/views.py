@@ -7,7 +7,7 @@ import trio
 from django.conf import settings as project_settings
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
-from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -28,7 +28,7 @@ def info(request):
     The "about" view.
     Can get here from 'info' url, and the root-url redirects here.
     """
-    log.debug('starting info()')
+    log.debug('\n\nstarting info()')
     ## prep data ----------------------------------------------------
     context = {
         'quote': 'The best life is the one in which the creative impulses play the largest part and the possessive impulses the smallest.',
@@ -120,7 +120,7 @@ def logout(request):
     - Hits IDP shib-logout url.
     - Redirects user to info page.
     """
-    log.debug('starting logout()')
+    log.debug('\n\nstarting logout()')
     ## clear django-session -----------------------------------------
     auth.logout(request)
     ## build redirect-url -------------------------------------------
@@ -140,7 +140,7 @@ def request_collection(request: HttpRequest) -> HttpResponse:
     """
     Displays main page for requesting collection downloads.
     """
-    log.debug('starting request_collection()')
+    log.debug('\n\nstarting request_collection()')
     log.debug(f'user-authenticated-check, ``{request.user.is_authenticated}``')
     if request.user.is_authenticated:
         ## get user's first name
@@ -168,7 +168,7 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
     - If the collection is in-progress or completed, an alert is returned.
     - If the collection is not in-progress or completed, the download-confirmation form is returned.
     """
-    log.debug('starting hlpr_check_coll_id()')
+    log.debug('\n\nstarting hlpr_check_coll_id()')
     ## check collection id ------------------------------------------
     collection_id: str = request.POST.get('collection_id', '').strip()
     if not collection_id:
@@ -208,13 +208,13 @@ def hlpr_initiate_download(request: HttpRequest) -> HttpResponse:
     Handles request_collection() htmx confirm-download POST.
     - If the confirm-download is received, the job will be enqueued and an alert will be returned.
     """
-    log.debug('starting hlpr_initiate_download()')
+    log.debug('\n\nstarting hlpr_initiate_download()')
     collection_id = request.POST.get('collection_id', '').strip()
     if request.POST.get('action') == 'really_start_download':
         request_collection_helper.start_download(collection_id)
         return request_collection_helper.render_alert('Download started')
     else:
-        return HttpResponse(status=405)  # Method Not Allowed
+        return HttpResponseBadRequest('Bad request')
 
 
 # -------------------------------------------------------------------
