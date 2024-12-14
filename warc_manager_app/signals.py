@@ -17,18 +17,6 @@ from warc_manager_app.models import UserProfile
 log = logging.getLogger(__name__)
 
 
-# @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-# def create_or_update_user_profile(sender, instance, created, **kwargs):
-#     log.debug('starting create_or_update_user_profile()')
-#     if created:
-#         log.debug('creating a UserProfile record')
-#         UserProfile.objects.create(user=instance)
-#     else:
-#         log.debug('updating a UserProfile record')
-#         UserProfile.objects.get_or_create(user=instance)
-#         instance.userprofile.save()
-
-
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 # def create_or_update_user_profile(sender, instance, created, **kwargs):
 def create_or_update_user_profile(sender: Type[Model], instance: Model, created: bool, **kwargs: Any) -> None:
