@@ -202,6 +202,8 @@ LOGIN_URL = os.environ['LOGIN_URL']
 
 TEST_SHIB_META_DCT = json.loads(os.environ['TEST_SHIB_META_DCT_JSON'])
 
+SHIB_IDP_LOGOUT_URL: str = os.environ['SHIB_IDP_LOGOUT_URL']
+
 WASAPI_URL_ROOT = os.environ['WASAPI_URL_ROOT']
 WASAPI_USR = os.environ['WASAPI_USR']
 WASAPI_KEY = os.environ['WASAPI_KEY']

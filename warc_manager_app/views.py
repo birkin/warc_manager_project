@@ -1,9 +1,11 @@
 import datetime
 import json
 import logging
+from urllib import parse
 
 import trio
 from django.conf import settings as project_settings
+from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import render
@@ -73,27 +75,24 @@ def login(request):
 
 def logout(request):
     """
-    Will log user out and redirect to the `info` page.
+    Flow:
+    - Clears django-session.
+    - Hits IDP shib-logout url.
+    - Redirects user to info page.
     """
     log.debug('starting logout()')
-    return HttpResponseRedirect(reverse('info_url'))
-
-
-## template to implement above
-# def shib_logout( request ):
-#     """ Clears session, hits shib logout, and redirects user to landing page. """
-#     log.debug( 'request.__dict__, ```%s```' % request.__dict__ )
-#     request.session[u'authz_info'][u'authorized'] = False
-#     logout( request )
-#     scheme = u'https' if request.is_secure() else u'http'
-#     redirect_url = u'%s://%s%s' % ( scheme, request.get_host(), reverse(u'request_url') )
-#     if request.get_host() == u'127.0.0.1' and project_settings.DEBUG == True:  # eases local development
-#         pass
-#     else:
-#         encoded_redirect_url =  urlquote( redirect_url )  # django's urlquote()
-#         redirect_url = u'%s?return=%s' % ( os.environ[u'EZSCAN__SHIB_LOGOUT_URL_ROOT'], encoded_redirect_url )
-#     log.debug( u'in views.shib_logout(); redirect_url, `%s`' % redirect_url )
-#     return HttpResponseRedirect( redirect_url )
+    ## clear django-session -----------------------------------------
+    auth.logout(request)
+    ## build redirect-url -------------------------------------------
+    redirect_url: str = f'{request.scheme}://{request.get_host()}{reverse("info_url")}'
+    if request.get_host() in ['127.0.0.1', '127.0.0.1:8000'] and project_settings.DEBUG == True:  # eases local development
+        pass  # will redirect right to the info url
+    else:
+        ## build shib-logout-url -------------------------------------
+        encoded_return_param_url: str = parse.quote(redirect_url, safe='')
+        redirect_url: str = f'{project_settings.SHIB_IDP_LOGOUT_URL}?return={encoded_return_param_url}'
+    log.debug(f'redirect_url, ``{redirect_url}``')
+    return HttpResponseRedirect(redirect_url)
 
 
 @login_required
