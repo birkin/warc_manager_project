@@ -1,5 +1,5 @@
 """
-Implements signals for the bdr_deposits_uploader_app.
+Implements signals for the warc_manager_app.
 Enables auto-creation of a UserProfile record when a new User record is created.
 See the README for more info.
 """
