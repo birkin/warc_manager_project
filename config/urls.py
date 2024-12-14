@@ -6,6 +6,7 @@ from warc_manager_app import views
 urlpatterns = [
     ## main ---------------------------------------------------------
     path('info/', views.info, name='info_url'),
+    path('pre_login/', views.collection, name='pre_login_url'),
     path('login/', views.login, name='login_url'),
     path('logout/', views.logout, name='logout_url'),
     path('request_collection/', views.request_collection, name='request_collection_url'),
