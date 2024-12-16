@@ -1,3 +1,4 @@
+import json
 import logging
 import pprint
 from typing import List, Optional
@@ -167,11 +168,13 @@ class CollectionDataPrepper:
     Called by get_collection_data().
     """
 
-    def __init__(self, collection_id: str):
-        self.url = f'{settings.WASAPI_URL_ROOT}?collection={collection_id}'
+    def __init__(self, arc_collection_id: str):
+        self.arc_collection_id: str = arc_collection_id
+        self.url = f'{settings.WASAPI_URL_ROOT}?collection={arc_collection_id}'
         log.debug(f'url = ``{self.url}``')
         self.auth: httpx.BasicAuth = httpx.BasicAuth(username=settings.WASAPI_USR, password=settings.WASAPI_KEY)
         self.client: httpx.Client = httpx.Client(auth=self.auth)
+        self.initial_data: dict | None = None
         self.all_files: List[str] = []
 
     def grab_initial_collection_data(self) -> dict | None:
@@ -189,7 +192,16 @@ class CollectionDataPrepper:
                 log.debug(f'data for empty-count response, ``{pprint.pformat(data)}``')
                 data = None
             else:
-                log.debug(f'data.keys(), ``{pprint.pformat(data.keys())}``')
+                log.debug(
+                    f'data.keys(), ``{pprint.pformat(data.keys())}``'
+                )  # dict_keys(['count', 'next', 'previous', 'files', 'includes-extra', 'request-url'])
+                log.debug(f'data["count"], ``{data["count"]}``')
+                log.debug(f'data["next"], ``{data["next"]}``')
+                log.debug(f'data["previous"], ``{data["previous"]}``')
+                # log.debug( f'data["files"][:3], ``{data["files"][:3]}``' )
+                log.debug(f'data["includes-extra"], ``{data["includes-extra"]}``')
+                log.debug(f'data["request-url"], ``{data["request-url"]}``')
+                self.initial_data = data
         else:
             log.debug('non-200 status, so setting overview_data to None')
             data = None
@@ -239,22 +251,22 @@ class CollectionDataPrepper:
         file_count: int = len(self.all_files)
         log.debug(f'file_count, ``{file_count}``')
         log.debug(f'First 3 files: {pprint.pformat(self.all_files[:3])}')
+        total_size_in_bytes: int = sum([file['size'] for file in self.all_files])
+        total_size_gb: float = total_size_in_bytes / (1024**3)
 
         ## save query ---------------------------------------
         try:
             collection = models.Collection.objects.create(
-                arc_collection_id=collection_id,
-                item_count=collection_overview_api_data['item_count'],
-                size_in_bytes=collection_overview_api_data['size_in_bytes'],
+                arc_collection_id=self.arc_collection_id,
+                item_count=self.initial_data['count'],
+                size_in_bytes=total_size_in_bytes,
                 status='queried',
-                all_files=collection_overview_api_data['all_files'],
+                all_files_on_arc=json.dumps(self.all_files),
             )
             collection.save()
         except Exception:
             log.exception('error on collection save,')
 
-        total_size_in_bytes: int = sum([file['size'] for file in self.all_files])
-        total_size_gb: float = total_size_in_bytes / (1024**3)
         data = {'total_size': f'{total_size_gb:.2f} GB', 'item_count': file_count}
         return data
 
