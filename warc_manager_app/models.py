@@ -20,7 +20,7 @@ class Collection(models.Model):
         ('complete', 'Complete'),
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    collection_id = models.CharField(
+    arc_collection_id = models.CharField(
         max_length=50,
         unique=True,
     )
