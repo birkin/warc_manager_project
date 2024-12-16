@@ -50,7 +50,7 @@ class Collection(models.Model):
         return round(self.size_in_bytes / (1024**3), 2)
 
     def __str__(self):
-        return self.collection_id
+        return self.arc_collection_id
 
 
 class UserProfile(models.Model):
