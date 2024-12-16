@@ -9,15 +9,21 @@ class Collection(models.Model):
     For reference:
     - null=True means the field is allowed to be empty in the database.
     - blank=True means the field is allowed to be empty in forms (including the admin).
+
+    Notes:
+    - STATUS_CHOICES contains commented out options that may be used in the future.
+    - For future, consider adding a collection-snapshots model to track changes over time.
+      This could contain snapshots of archivit data, and snapshots of on-disk data.
     """
 
     STATUS_CHOICES = (  # used by the status field; meaning: (db-code, human-readable description)
         ('queried', 'Queried'),
         ('download_requested', 'Download requested'),
-        ('additions_requested', 'Download additions requested'),
-        ('in_progress', 'In Progress'),
-        ('paused', 'Paused'),
-        ('complete', 'Complete'),
+        # ('additions_requested', 'Download additions requested'),
+        ('download_in_progress', 'Download in progress'),
+        # ('additions_download_in_progress', 'Download-Additions in progress'),
+        # ('download_paused', 'Download paused'),
+        ('download_complete', 'Download complete'),
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     arc_collection_id = models.CharField(

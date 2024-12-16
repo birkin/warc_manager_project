@@ -11,6 +11,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpR
 from django.shortcuts import render
 from django.urls import reverse
 
+from warc_manager_app import models
 from warc_manager_app.lib import request_collection_helper, version_helper
 from warc_manager_app.lib.shib_handler import shib_decorator
 from warc_manager_app.lib.version_helper import GatherCommitAndBranchData
@@ -176,7 +177,7 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
         return request_collection_helper.render_alert('Collection ID is required.', include_info_link=False)
     else:
         ## check for in-progress or completed -----------------------
-        status: dict = request_collection_helper.check_collection_status(collection_id)
+        status: dict = request_collection_helper.check_collection_status(collection_id)  # TODO
         log.debug(f'status: {status}')
         resp: HttpResponse | None = request_collection_helper.handle_status(status)
         log.debug(f'collection status resp: {resp}')
@@ -187,9 +188,20 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
             collection_overview_api_data: dict | None = request_collection_helper.get_collection_data(collection_id)
             log.debug(f'api_data: {collection_overview_api_data}')
             if collection_overview_api_data:
-                log.debug('collection data found, so rending download confirmation form')
-                csrf_token = request.COOKIES.get('csrftoken')
+                log.debug('collection data found, so saving query and rendering download confirmation form')
+                ## save query ---------------------------------------
+
+                ## get new Collection instance
+                collection = models.Collection.objects.create(
+                    collection_id=collection_id,
+                    item_count=collection_overview_api_data['item_count'],
+                    size_in_bytes=collection_overview_api_data['size_in_bytes'],
+                    status='queried',
+                    all_files=collection_overview_api_data['all_files'],
+                )
+
                 ## return download confirmation form ----------------
+                csrf_token = request.COOKIES.get('csrftoken')
                 html_content: str = request_collection_helper.render_download_confirmation_form(
                     collection_overview_api_data, collection_id, csrf_token
                 )
