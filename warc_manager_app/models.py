@@ -14,6 +14,7 @@ class Collection(models.Model):
     - STATUS_CHOICES contains commented out options that may be used in the future.
     - For future, consider adding a collection-snapshots model to track changes over time.
       This could contain snapshots of archivit data, and snapshots of on-disk data.
+    - al_files_on_arc may eventually become a separate Files model.
     """
 
     STATUS_CHOICES = (  # used by the status field; meaning: (db-code, human-readable description)
@@ -33,9 +34,10 @@ class Collection(models.Model):
     item_count = models.IntegerField(blank=True)
     size_in_bytes = models.BigIntegerField(blank=True, null=True)
     notes = models.TextField(default='', blank=True)
-    status = models.CharField(max_length=3, choices=STATUS_CHOICES, blank=True, null=True)
-    status_history = models.JSONField(default=list, blank=True)  # list of status changes
-    all_files = models.JSONField(default=list, blank=True)  # list; will likely eventually become a separate File model
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, blank=True, null=True)
+    status_history = models.JSONField(default=dict, blank=True)  # list of status changes
+    all_files_on_arc = models.JSONField(default=dict, blank=True)
+    all_files_on_disc = models.JSONField(default=dict, blank=True)
     errors = models.BooleanField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
