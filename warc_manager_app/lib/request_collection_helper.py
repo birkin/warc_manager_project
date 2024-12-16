@@ -212,14 +212,40 @@ class CollectionDataPrepper:
             next_url = current_data.get('next')
         return
 
+    # def build_overview_dict(self) -> dict:
+    #     """
+    #     Builds the overview dict.
+    #     Called by get_collection_data().
+    #     Note -- this is where I need to do the save.
+    #     """
+    #     file_count: int = len(self.all_files)
+    #     log.debug(f'file_count, ``{file_count}``')
+    #     log.debug(f'First 5 files: {pprint.pformat(self.all_files[:5])}')
+    #     total_size_in_bytes: int = sum([file['size'] for file in self.all_files])
+    #     total_size_gb: float = total_size_in_bytes / (1024**3)
+    #     data = {'total_size': f'{total_size_gb:.2f} GB', 'item_count': file_count}
+    #     return data
+
     def build_overview_dict(self) -> dict:
         """
         Builds the overview dict.
         Called by get_collection_data().
+        Note -- this is where I need to do the save.
         """
         file_count: int = len(self.all_files)
         log.debug(f'file_count, ``{file_count}``')
-        log.debug(f'First 5 files: {self.all_files[:5]}')
+        log.debug(f'First 5 files: {pprint.pformat(self.all_files[:5])}')
+
+        ## save query ---------------------------------------
+        collection = models.Collection.objects.create(
+            collection_id=collection_id,
+            item_count=collection_overview_api_data['item_count'],
+            size_in_bytes=collection_overview_api_data['size_in_bytes'],
+            status='queried',
+            all_files=collection_overview_api_data['all_files'],
+        )
+        collection.save()
+
         total_size_in_bytes: int = sum([file['size'] for file in self.all_files])
         total_size_gb: float = total_size_in_bytes / (1024**3)
         data = {'total_size': f'{total_size_gb:.2f} GB', 'item_count': file_count}

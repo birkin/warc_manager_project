@@ -11,7 +11,6 @@ from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpR
 from django.shortcuts import render
 from django.urls import reverse
 
-from warc_manager_app import models
 from warc_manager_app.lib import request_collection_helper, version_helper
 from warc_manager_app.lib.shib_handler import shib_decorator
 from warc_manager_app.lib.version_helper import GatherCommitAndBranchData
@@ -188,18 +187,7 @@ def hlpr_check_coll_id(request: HttpRequest) -> HttpResponse:
             collection_overview_api_data: dict | None = request_collection_helper.get_collection_data(collection_id)
             log.debug(f'api_data: {collection_overview_api_data}')
             if collection_overview_api_data:
-                log.debug('collection data found, so saving query and rendering download confirmation form')
-                ## save query ---------------------------------------
-
-                ## get new Collection instance
-                collection = models.Collection.objects.create(
-                    collection_id=collection_id,
-                    item_count=collection_overview_api_data['item_count'],
-                    size_in_bytes=collection_overview_api_data['size_in_bytes'],
-                    status='queried',
-                    all_files=collection_overview_api_data['all_files'],
-                )
-
+                log.debug('collection data found, so rendering download confirmation form')
                 ## return download confirmation form ----------------
                 csrf_token = request.COOKIES.get('csrftoken')
                 html_content: str = request_collection_helper.render_download_confirmation_form(
