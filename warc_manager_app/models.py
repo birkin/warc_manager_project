@@ -11,12 +11,13 @@ class Collection(models.Model):
     - blank=True means the field is allowed to be empty in forms (including the admin).
     """
 
-    STATUS_CHOICES = (  # used by the status field; the first value is stored in the db
-        ('NEW', 'New download requested'),
-        ('ADD', 'Download additions requested'),
-        ('INP', 'In Progress'),
-        ('PAU', 'Paused'),
-        ('COM', 'Complete'),
+    STATUS_CHOICES = (  # used by the status field; meaning: (db-code, human-readable description)
+        ('queried', 'Queried'),
+        ('download_requested', 'Download requested'),
+        ('additions_requested', 'Download additions requested'),
+        ('in_progress', 'In Progress'),
+        ('paused', 'Paused'),
+        ('complete', 'Complete'),
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     collection_id = models.CharField(
