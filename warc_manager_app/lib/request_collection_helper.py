@@ -12,6 +12,102 @@ from warc_manager_app import models
 log = logging.getLogger(__name__)
 
 
+class CollectionDataPrepper:
+    """
+    Class to prepare collection data for a given collection ID.
+    - Makes the initial API call for the given collection-id.
+    - Inspects the response and makes multiple subsequent "next" calls if necessary.
+    - Builds an overview dict with the total size and number of items.
+    Called by get_collection_data().
+    """
+
+    def __init__(self, arc_collection_id: str):
+        self.arc_collection_id: str = arc_collection_id
+        self.url = f'{settings.WASAPI_URL_ROOT}?collection={arc_collection_id}'
+        log.debug(f'url = ``{self.url}``')
+        self.auth: httpx.BasicAuth = httpx.BasicAuth(username=settings.WASAPI_USR, password=settings.WASAPI_KEY)
+        self.client: httpx.Client = httpx.Client(auth=self.auth)
+        self.initial_data: dict | None = None
+        self.all_files: List[str] = []
+
+    def grab_initial_collection_data(self) -> dict | None:
+        """
+        Makes the initial request to the collection data API.
+        Called by get_collection_data().
+        """
+        resp: httpx.Response = self.client.get(self.url)
+        elapsed_time: float = resp.elapsed.total_seconds()
+        log.debug(f'elapsed_time, ``{elapsed_time}`` seconds')
+        if resp.status_code == 200:
+            log.debug('200 status, so evaluating json')
+            data: dict = resp.json()
+            if data.get('count', 0) < 1:  # eg, collection-id `19111` returns a 200, but a count of zero
+                log.debug(f'data for empty-count response, ``{pprint.pformat(data)}``')
+                data = None
+            else:
+                log.debug(
+                    f'data.keys(), ``{pprint.pformat(data.keys())}``'
+                )  # dict_keys(['count', 'next', 'previous', 'files', 'includes-extra', 'request-url'])
+                log.debug(f'data["count"], ``{data["count"]}``')
+                log.debug(f'data["next"], ``{data["next"]}``')
+                log.debug(f'data["previous"], ``{data["previous"]}``')
+                # log.debug( f'data["files"][:3], ``{data["files"][:3]}``' )
+                log.debug(f'data["includes-extra"], ``{data["includes-extra"]}``')
+                log.debug(f'data["request-url"], ``{data["request-url"]}``')
+                self.initial_data = data
+        else:
+            log.debug('non-200 status, so setting overview_data to None')
+            data = None
+        return data
+
+    def get_rest_of_files(self, data: dict) -> None:
+        """
+        Makes as many "next" API-calls as necessary.
+        Called by get_collection_data().
+        """
+        log.debug('starting parse_collection_data()')
+        log.debug(f'data (first 1.5K chars), ``{pprint.pformat(data)[:1500]}``')
+        ## store existing files -----------------------------------------
+        self.all_files.extend(data.get('files', []))
+        log.debug(f'number of files initially, ``{len(self.all_files)}``')
+        ## loop through the remaining pages using "next" links ----------
+        next_url: Optional[str] = data.get('next')
+        while next_url:
+            response = self.client.get(next_url)
+            if response.status_code != 200:
+                raise RuntimeError(f'Failed to fetch data from ``{next_url}``: ``{response.status_code}``')
+            current_data = response.json()
+            self.all_files.extend(current_data.get('files', []))
+            next_url = current_data.get('next')
+        log.debug('returning')
+        return
+
+    def calculate_total_size(self) -> int:
+        """
+        Calculates the total size of all files.
+        Called by build_overview_dict().
+        """
+        total_size_in_bytes: int = sum([file['size'] for file in self.all_files])
+        return total_size_in_bytes
+
+    def build_overview_dict(self) -> dict:
+        """
+        Builds the overview dict.
+        Called by get_collection_data().
+        Note -- this is where I need to do the save.
+        Called by get_collection_data().
+        """
+        file_count: int = len(self.all_files)
+        log.debug(f'file_count, ``{file_count}``')
+        log.debug(f'First 3 files: {pprint.pformat(self.all_files[:3])}')
+        total_size_in_bytes: int = self.calculate_total_size()
+        total_size_gb: float = total_size_in_bytes / (1024**3)
+        data = {'total_size': f'{total_size_gb:.2f} GB', 'item_count': file_count}
+        return data
+
+    ## end class CollectionDataPrepper
+
+
 def get_recent_collections() -> list:
     """
     Shows the recent collections.
@@ -123,11 +219,35 @@ def get_collection_data(collection_id) -> dict | None:
     initial_collection_data: dict | None = collection_data_prepper.grab_initial_collection_data()
     if initial_collection_data:
         collection_data_prepper.get_rest_of_files(initial_collection_data)
+        log.debug('about to call save_collection_data()')
+        try:
+            save_collection_data(collection_data_prepper)
+        except Exception:
+            log.exception('Error saving collection data')
         overview_data = collection_data_prepper.build_overview_dict()
     else:
         overview_data = None
     log.debug(f'overview_data, ``{overview_data}``')
     return overview_data
+
+
+def save_collection_data(collection_data_prepper: CollectionDataPrepper) -> None:
+    """
+    Saves or updates the collection-api data to the database.
+    Called by get_collection_data().
+    """
+    log.debug('starting save_collection_data()')
+    collection: models.Collection
+    created: bool
+    (collection, created) = models.Collection.objects.update_or_create(
+        arc_collection_id=collection_data_prepper.arc_collection_id,
+        item_count=collection_data_prepper.initial_data['count'],
+        size_in_bytes=collection_data_prepper.calculate_total_size(),
+        status='queried',
+        all_files_on_arc=json.dumps(collection_data_prepper.all_files),
+    )
+    log.debug(f'created, ``{created}``')
+    return
 
 
 def render_download_confirmation_form(api_data: dict, collection_id: str, csrf_token: str | None) -> str:
@@ -157,117 +277,3 @@ def start_download(collection_id: str):
     log.debug(f'Starting download for collection ID: {collection_id}')
     ## dummy implementation
     return
-
-
-class CollectionDataPrepper:
-    """
-    Class to prepare collection data for a given collection ID.
-    - Makes the initial API call for the given collection-id.
-    - Inspects the response and makes multiple subsequent "next" calls if necessary.
-    - Builds an overview dict with the total size and number of items.
-    Called by get_collection_data().
-    """
-
-    def __init__(self, arc_collection_id: str):
-        self.arc_collection_id: str = arc_collection_id
-        self.url = f'{settings.WASAPI_URL_ROOT}?collection={arc_collection_id}'
-        log.debug(f'url = ``{self.url}``')
-        self.auth: httpx.BasicAuth = httpx.BasicAuth(username=settings.WASAPI_USR, password=settings.WASAPI_KEY)
-        self.client: httpx.Client = httpx.Client(auth=self.auth)
-        self.initial_data: dict | None = None
-        self.all_files: List[str] = []
-
-    def grab_initial_collection_data(self) -> dict | None:
-        """
-        Makes the initial request to the collection data API.
-        Called by get_collection_data().
-        """
-        resp: httpx.Response = self.client.get(self.url)
-        elapsed_time: float = resp.elapsed.total_seconds()
-        log.debug(f'elapsed_time, ``{elapsed_time}`` seconds')
-        if resp.status_code == 200:
-            log.debug('200 status, so evaluating json')
-            data: dict = resp.json()
-            if data.get('count', 0) < 1:  # eg, collection-id `19111` returns a 200, but a count of zero
-                log.debug(f'data for empty-count response, ``{pprint.pformat(data)}``')
-                data = None
-            else:
-                log.debug(
-                    f'data.keys(), ``{pprint.pformat(data.keys())}``'
-                )  # dict_keys(['count', 'next', 'previous', 'files', 'includes-extra', 'request-url'])
-                log.debug(f'data["count"], ``{data["count"]}``')
-                log.debug(f'data["next"], ``{data["next"]}``')
-                log.debug(f'data["previous"], ``{data["previous"]}``')
-                # log.debug( f'data["files"][:3], ``{data["files"][:3]}``' )
-                log.debug(f'data["includes-extra"], ``{data["includes-extra"]}``')
-                log.debug(f'data["request-url"], ``{data["request-url"]}``')
-                self.initial_data = data
-        else:
-            log.debug('non-200 status, so setting overview_data to None')
-            data = None
-        return data
-
-    def get_rest_of_files(self, data: dict) -> dict:
-        """
-        Makes as many "next" API-calls as necessary.
-        Called by get_collection_data().
-        """
-        log.debug('starting parse_collection_data()')
-        log.debug(f'data (first 1.5K chars), ``{pprint.pformat(data)[:1500]}``')
-        ## store existing files -----------------------------------------
-        self.all_files.extend(data.get('files', []))
-        log.debug(f'number of files initially, ``{len(self.all_files)}``')
-        ## loop through the remaining pages using "next" links ----------
-        next_url: Optional[str] = data.get('next')
-        while next_url:
-            response = self.client.get(next_url)
-            if response.status_code != 200:
-                raise RuntimeError(f'Failed to fetch data from ``{next_url}``: ``{response.status_code}``')
-            current_data = response.json()
-            self.all_files.extend(current_data.get('files', []))
-            next_url = current_data.get('next')
-        return
-
-    # def build_overview_dict(self) -> dict:
-    #     """
-    #     Builds the overview dict.
-    #     Called by get_collection_data().
-    #     Note -- this is where I need to do the save.
-    #     """
-    #     file_count: int = len(self.all_files)
-    #     log.debug(f'file_count, ``{file_count}``')
-    #     log.debug(f'First 5 files: {pprint.pformat(self.all_files[:5])}')
-    #     total_size_in_bytes: int = sum([file['size'] for file in self.all_files])
-    #     total_size_gb: float = total_size_in_bytes / (1024**3)
-    #     data = {'total_size': f'{total_size_gb:.2f} GB', 'item_count': file_count}
-    #     return data
-
-    def build_overview_dict(self) -> dict:
-        """
-        Builds the overview dict.
-        Called by get_collection_data().
-        Note -- this is where I need to do the save.
-        """
-        file_count: int = len(self.all_files)
-        log.debug(f'file_count, ``{file_count}``')
-        log.debug(f'First 3 files: {pprint.pformat(self.all_files[:3])}')
-        total_size_in_bytes: int = sum([file['size'] for file in self.all_files])
-        total_size_gb: float = total_size_in_bytes / (1024**3)
-
-        ## save query ---------------------------------------
-        try:
-            collection = models.Collection.objects.create(
-                arc_collection_id=self.arc_collection_id,
-                item_count=self.initial_data['count'],
-                size_in_bytes=total_size_in_bytes,
-                status='queried',
-                all_files_on_arc=json.dumps(self.all_files),
-            )
-            collection.save()
-        except Exception:
-            log.exception('error on collection save,')
-
-        data = {'total_size': f'{total_size_gb:.2f} GB', 'item_count': file_count}
-        return data
-
-    ## end class CollectionDataPrepper
